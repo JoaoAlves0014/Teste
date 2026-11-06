@@ -34,3 +34,4 @@ html[data-theme='dark'] .cloud-message{color:#e3c99b}
 html[data-theme='dark'] .overlay{background:#0009}
 html[data-theme='dark'] input::placeholder{color:#9eb09e}
 @media(max-width:760px){.theme-toggle{bottom:84px;right:14px;padding:11px;box-shadow:0 3px 18px #0003}.theme-toggle span{display:none}footer{padding-right:0}}
+.forecast-panel{margin-bottom:24px}.plan-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 18px;align-items:end;margin-bottom:24px}.plan-form button{margin-bottom:20px;min-height:42px}.forecast-panel .table-scroll{margin:18px 0}.forecast-panel .budget-row span{line-height:1.7}.forecast-panel td small{font-size:10px;min-width:100px}.forecast-panel .budget-row{gap:14px}@media(max-width:760px){.plan-form{grid-template-columns:1fr}.forecast-panel .budget-row strong{white-space:nowrap}}

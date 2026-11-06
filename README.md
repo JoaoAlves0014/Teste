@@ -1,62 +1,57 @@
 # Clareza
 
-Primeira versão do controle financeiro pessoal, em português, com Next.js e TypeScript.
+Controle financeiro pessoal em português, com Next.js, TypeScript, Supabase e login Google. Funciona no computador e no celular, com temas claro e escuro.
 
 ## Desenvolvimento
 
-Requer Node.js 24 e npm 11.
+Node.js 24 e npm 11. Use o checkout existente, sem criar worktrees.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Validação: `npm test`, `npm run typecheck`, `npm run build`. Produção: `npm start` após o build.
+Sem variáveis Supabase, roda no modo local. Para conectar uma conta, siga [supabase/SETUP.md](supabase/SETUP.md). Nunca configure chaves secret ou service_role como NEXT_PUBLIC.
 
-## O que funciona
+Validação: `npm test`, `npm run typecheck`, `npm run build`. Após o build, `npm start` e `npm run test:e2e` validam o modo local. `npx playwright test --config playwright.cloud.config.ts` valida autenticação e persistência simuladas.
 
-- Painel com dinheiro disponível, reservas, garantia mensal C6 e repasses acumulados do pai.
-- Cadastro e exclusão de receitas, saídas e repasses.
-- Compras parceladas com valor total em centavos, parcelas futuras e cadastro de compras em andamento.
-- Faturas por ciclo, pagamento integral após fechamento e cancelamento de pagamento pelo histórico.
-- Teto pessoal do Nubank separado do limite bancário.
-- Simulação de compra à vista ou parcelada sem juros, com distribuição exata dos centavos.
-- Configurações editáveis e backup/restauração JSON.
-- Interface responsiva para celular e computador.
+## Previsão financeira
 
-## Limites desta versão
+- O disponível de hoje usa dinheiro recebido e reservas livres, descontando segurança, garantia C6 restante, orçamento variável restante e despesas/faturas até o próximo salário. Não antecipa salário ou repasses pendentes do pai.
+- Ciclos vão do dia do salário até antes do próximo pagamento. O quinto dia útil conta sábado, exclui domingo, feriados nacionais, Sexta-feira Santa, Corpus Christi e 8 de setembro em Curitiba. Consciência Negra é incluída desde 2024. Carnaval, pontos facultativos e outras regras do empregador exigem datas adicionais nas configurações.
+- O salário de cada mês pode ser ajustado. A projeção não cria recebimentos: registre **Salário recebido** quando o dinheiro entrar. O mês é identificado pela data informada; um recebimento identificado substitui a previsão do mesmo mês.
+- No dia do salário, o disponível continua dependendo do recebimento real; o próximo salário previsto passa a ser o do mês seguinte.
+- Registre **Aporte na garantia C6** quando separar o dinheiro. Ele sai do caixa e reduz a reserva restante desse compromisso no ciclo atual. Não há saldo de garantia disponível para gastar.
+- Saídas comuns consomem o orçamento variável do ciclo. Pagamentos vinculados a despesas previstas ficam separados desse orçamento para evitar dupla reserva.
+- A reserva de segurança é um saldo mínimo mantido, não uma despesa debitada novamente todo mês.
+- Os ciclos futuros acumulam saldo, salário, despesas previstas e parcelas reais. O menor saldo sinaliza déficit antes de uma receita futura. Na mesma data futura, entradas são consideradas antes das saídas; confira o horário efetivo com o banco.
 
-Dados ficam no localStorage deste navegador, sem autenticação ou sincronização. Não compartilhe um perfil de navegador que contém dados pessoais. Não há conexão ao banco, Supabase ou Google. Não cole credenciais na interface.
+## Despesas previstas
 
-O disponível é conservador: caixa + reservas livres − faturas pendentes fechadas e o próximo ciclo de cada cartão − aporte mensal na garantia − orçamento variável − reserva de segurança. Salário futuro e repasses pendentes não entram no saldo. O aporte é apenas reservado nesta versão, não movimentado automaticamente.
+Em Movimentações, cadastre despesas únicas ou mensais com início e fim opcionais. Uma assinatura parcelada ou empréstimo com prestação fixa pode ser representado como despesa mensal até a última data; não há cálculo de juros/amortização de empréstimo.
 
-## Compras e faturas
+Uma previsão não movimenta o caixa. No vencimento ou depois, **Registrar pagamento** cria a saída e liquida a ocorrência. Pendências antigas continuam reservadas. Excluir o pagamento no histórico reabre a ocorrência. Planos já pagos ficam protegidos contra exclusão; para interromper uma recorrência, encerre-a. Não registre saída manual adicional para a mesma conta. Dias 29–31 são ajustados ao último dia dos meses menores.
 
-1. Configure fechamento e vencimento do cartão (dias de 1 a 31).
-2. Na aba Cartões, registre o valor total e o número de parcelas. A distribuição preserva cada centavo; as primeiras parcelas recebem o resto da divisão.
-3. Para compras em andamento, informe a próxima parcela pendente e o mês do fechamento correspondente. Parcelas anteriores não geram saídas retroativas; seu saldo inicial já deve refletir o passado.
-4. Compras no dia do fechamento entram no próximo ciclo por padrão. Ajuste o mês explicitamente conforme o banco. Dias inexistentes são limitados ao último dia do mês. Vencimento anterior ao fechamento passa ao mês seguinte.
-5. Após o fechamento, use Pagar e confirme. A saída e a liquidação são registradas juntas. Não crie uma saída manual adicional para a mesma fatura.
-6. Para cancelar um pagamento, exclua-o em Movimentações. As parcelas voltam a ficar pendentes. Compras com pagamentos vinculados ficam protegidas contra exclusão até o cancelamento.
+## Cartões
 
-Compras novas guardam as datas de ciclo no momento do cadastro; alterações posteriores nas configurações valem para compras novas. Registros legados sem datas próprias seguem as configurações, com fallback de fim do mês se ainda não configuradas. O campo manual de mês serve para conferir o ciclo real no banco.
+Configure fechamento e vencimento. Cadastre valor total e parcelas; para compras antigas, indique a primeira parcela pendente e o mês do fechamento correspondente. As parcelas anteriores não geram saídas retroativas.
 
-Não há juros, encargos ou pagamentos parciais. O limite de R$ 200 do C6 na visão geral é a referência inicial, não uma consulta ao banco.
+Compras no dia do fechamento entram no próximo ciclo por padrão. Ajuste o mês segundo o banco. Compras novas guardam as datas de ciclo; mudanças de configuração valem para novas compras. Registros legados sem datas seguem as configurações, com fallback de fim do mês.
 
-A simulação ainda é estimativa estática: primeiro mês usa saldo disponível, demais meses usam salário menos reservas e faturas reservadas atuais. Não substitui projeção com todas as despesas futuras. O quinto dia útil, feriados de Curitiba, empréstimos e investimentos ainda precisam de implementação antes de usar o app como previsão financeira completa.
+Faturas são previstas no fechamento, conforme a preferência de pagamento. Após fechar, **Pagar** cria a saída e liquida as parcelas numa operação. Excluir o pagamento desfaz a liquidação. Não há juros, encargos ou pagamentos parciais. O painel C6 usa R$ 200 como referência inicial; confira o limite efetivo no banco.
 
-Testes de interface: mantenha `npm start` em execução após o build e execute `npm run test:e2e`. O Playwright usa Chromium em `/usr/bin/chromium`.
+## Simulador
 
-## Próxima etapa
+Compara pagamento à vista ou cartão sem juros, sem criar compras reais. Usa os ciclos de salário e as parcelas existentes, mostra pagamentos por ciclo, saldo final e menor saldo. A recomendação de máximo usa os dados cadastrados no horizonte exibido (mínimo seis ciclos; maior em compras parceladas), teto pessoal Nubank e limite bancário informado de R$ 4.000. Não consulta nem garante aprovação de crédito. No C6, o limite precisa ser conferido pelo usuário. Despesas não cadastradas não podem ser previstas.
 
-Persistência no Supabase com autenticação Google e políticas por usuário; transferências e empréstimos; calendário de salário e projeção até o próximo pagamento. Nenhum valor de chave secreta deve ser versionado.
+## Dados e publicação
 
-## Publicar na Vercel
+Com Supabase configurado, login obrigatório e dados por usuário sob RLS. **Salvar na nuvem** é explícito; **Recarregar conta** traz alterações de outro dispositivo. A importação de dados locais exige confirmação. Sem Supabase, tudo fica neste navegador. Faça backups JSON pelas configurações.
 
-No painel da Vercel, escolha Add New → Project e importe `JoaoAlves0014/Teste`. Framework: Next.js; Root Directory: raiz do repositório; Install Command: `npm ci`; Build Command: `npm run build`; Output Directory: padrão do Next.js. Node.js: 24.x. Esta versão não exige variáveis de ambiente. Clique em Deploy e use o domínio gerado pela Vercel.
+O modelo JSON aceita os campos novos sem migração adicional de banco; backups antigos permanecem aceitos. O modo escuro usa preferência de sistema ou escolha local.
 
-O app publicado não tem autenticação: cada navegador mantém seus próprios registros locais. Os dados não são enviados a um banco de dados. Não existe sincronização entre dispositivos, e limpar o armazenamento do site apaga os registros locais. Faça backups pela tela Configurações. O domínio de produção tem armazenamento distinto do ambiente de desenvolvimento e das URLs de preview.
+A Vercel acompanha `main` em `JoaoAlves0014/Teste`. Framework Next.js, diretório raiz, Node 24.x e build padrão. Variáveis NEXT_PUBLIC exigem novo build. Configuração e testes reais do banco estão descritos em [supabase/SETUP.md](supabase/SETUP.md).
 
-## Integração Supabase (preparada)
+## Próximas melhorias
 
-Veja [supabase/SETUP.md](supabase/SETUP.md) para SQL, políticas por usuário, Google OAuth e variáveis públicas. Com as variáveis configuradas, o app exige login e permite salvar/carregar a conta na nuvem explicitamente. Sem elas, permanece no modo local. A configuração real do projeto e o login Google precisam ser validados antes de anunciar a sincronização em produção.
+Conciliação de saldos, rendimentos e investimentos; transferências entre contas; cálculo de empréstimos com juros; atualização independente do limite C6.

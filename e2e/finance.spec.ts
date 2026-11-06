@@ -11,7 +11,7 @@ test('registra receita, preserva após recarregar e simula compra',async({page})
  await expect(page.getByText('Salário de teste',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Simulador',exact:true}).click();
  await page.getByLabel('Valor da compra (R$)').fill('1200');
- await expect(page.getByText('Cabe na estimativa cadastrada',{exact:true})).toBeVisible();
+ await expect(page.getByText('Compromete o orçamento ou o limite',{exact:true})).toBeVisible();
  await expect(page.locator('tbody tr')).toHaveCount(6);
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
@@ -45,4 +45,29 @@ test('compra em andamento, pagamento e estorno preservam o histórico',async({pa
  await page.getByRole('button',{name:'Excluir Pagamento Nubank · 2025-05-10',exact:true}).click();
  await page.getByRole('button',{name:'Cartões',exact:true}).click();
  await expect(page.locator('.bill').first().getByRole('button',{name:/Pagar/})).toBeVisible();
+});
+test('prevê despesa mensal, liquida sem duplicar e mantém ajuste salarial',async({page})=>{
+ await page.clock.install({time:new Date('2026-11-01T15:00:00Z')});
+ await page.goto('/');await expect(page.locator('.available')).toBeVisible();
+ await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('clareza-v1')!);d.settings={...d.settings,balance:100000,guarantee:20000,variable:10000,reserve:5000};d.entries=[];localStorage.setItem('clareza-v1',JSON.stringify(d))});await page.reload();
+ await expect(page.locator('.available h2')).toContainText('650,00');
+ await page.getByRole('button',{name:'Movimentações',exact:true}).click();
+ await page.getByLabel('Descrição da despesa',{exact:true}).fill('Internet');
+ await page.getByLabel('Valor da despesa (R$)',{exact:true}).fill('100');
+ await page.getByLabel('Primeira data prevista',{exact:true}).fill('2026-11-01');
+ await page.getByLabel('Repetição',{exact:true}).selectOption('monthly');
+ await page.getByLabel('Última data (opcional)',{exact:true}).fill('2027-01-01');
+ await page.getByRole('button',{name:'Adicionar despesa prevista',exact:true}).click();
+ const panel=page.locator('section').filter({has:page.getByRole('heading',{name:'Despesas previstas',exact:true})});
+ await expect(panel.locator('tbody tr')).toHaveCount(3);
+ await page.getByRole('button',{name:'Visão geral',exact:true}).click();await expect(page.locator('.available h2')).toContainText('550,00');
+ await page.getByRole('button',{name:'Movimentações',exact:true}).click();page.on('dialog',dialog=>dialog.accept());
+ await panel.getByRole('button',{name:'Registrar pagamento',exact:true}).first().click();await expect(panel.locator('tbody tr')).toHaveCount(2);
+ await page.getByRole('button',{name:'Visão geral',exact:true}).click();await expect(page.locator('.available h2')).toContainText('550,00');
+ await page.getByRole('button',{name:'Configurações',exact:true}).click();
+ await page.getByLabel('Mês do ajuste salarial',{exact:true}).fill('2026-11');await page.getByLabel('Salário líquido neste mês (R$)',{exact:true}).fill('1100');await page.getByRole('button',{name:'Salvar ajuste do mês'}).click();
+ await page.reload();await page.getByRole('button',{name:'Visão geral',exact:true}).click();
+ const forecastPanel=page.locator('section').filter({has:page.getByRole('heading',{name:'Até o próximo salário',exact:true})});
+ await expect(forecastPanel.locator('tbody tr').nth(1).locator('td').nth(1)).toContainText('1.100,00');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });

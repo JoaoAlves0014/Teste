@@ -15,6 +15,18 @@ Sem variáveis Supabase, roda no modo local. Para conectar uma conta, siga [supa
 
 Validação: `npm test`, `npm run typecheck`, `npm run build`. Após o build, `npm start` e `npm run test:e2e` validam o modo local. `npx playwright test --config playwright.cloud.config.ts` valida autenticação e persistência simuladas.
 
+## Navegação e dashboard
+
+- Dashboard: resumo do disponível, saldo, compromissos e reservas; gráfico dos próximos seis ciclos; despesas por categoria; lembretes; movimentações recentes; cartões e metas. Usa os dados cadastrados, sem exemplos fictícios no produto.
+- Movimentações: Histórico, Contas a pagar e Categorias são telas separadas.
+- Cartões: Faturas, Compras e Limites e datas.
+- Contas: Saldos (incluindo saldos iniciais) e Conferir com o banco.
+- Planejamento: Previsão de saldo e Simular compra.
+- Metas: objetivos e comparação de compras. O formulário de criação abre sob demanda.
+- Configurações: Meu orçamento, Salário e calendário, Backup e dados.
+
+No celular, Dashboard, Extrato e Cartões ficam na barra inferior; Mais abre a navegação completa. Na conta conectada, Salvar na nuvem permanece no topo. O menu Conta reúne recarregar, importar dados locais e sair. O tema escuro usa preto e grafite com verde nos destaques, seguindo a preferência já salva.
+
 ## Previsão financeira
 
 - O disponível de hoje usa dinheiro recebido e reservas livres, descontando segurança, garantia C6 restante, orçamento variável restante e despesas/faturas até o próximo salário. Não antecipa salário ou repasses pendentes do pai.
@@ -28,7 +40,7 @@ Validação: `npm test`, `npm run typecheck`, `npm run build`. Após o build, `n
 
 ## Despesas previstas
 
-Em Movimentações, cadastre despesas únicas ou mensais com início e fim opcionais. Uma assinatura parcelada ou empréstimo com prestação fixa pode ser representado como despesa mensal até a última data; não há cálculo de juros/amortização de empréstimo.
+Em Movimentações → Contas a pagar, cadastre despesas únicas ou mensais com início e fim opcionais. Uma assinatura parcelada ou empréstimo com prestação fixa pode ser representado como despesa mensal até a última data; não há cálculo de juros/amortização de empréstimo.
 
 Uma previsão não movimenta o caixa. No vencimento ou depois, **Registrar pagamento** cria a saída e liquida a ocorrência. Pendências antigas continuam reservadas. Excluir o pagamento no histórico reabre a ocorrência. Planos já pagos ficam protegidos contra exclusão; para interromper uma recorrência, encerre-a. Não registre saída manual adicional para a mesma conta. Dias 29–31 são ajustados ao último dia dos meses menores.
 
@@ -54,10 +66,10 @@ A Vercel acompanha `main` em `JoaoAlves0014/Teste`. Framework Next.js, diretóri
 
 ## Edição, categorias, metas e conferências
 
-- Em Movimentações, use o ícone de edição no histórico. Na aba Cartões, as compras também possuem botão Editar. Alterações sem pagamento recalculam saldo e parcelas. Compras e planos com pagamentos vinculados permitem descrição e categoria; para valores/datas/parcelas, cancele primeiro os pagamentos correspondentes. Pagamentos vinculados têm valor fixo para preservar a liquidação. O editor valida todos os vínculos antes de salvar.
+- Em Movimentações, use o ícone de edição no histórico. Na aba Cartões → Compras, as compras também possuem botão Editar. Alterações sem pagamento recalculam saldo e parcelas. Compras e planos com pagamentos vinculados permitem descrição e categoria; para valores/datas/parcelas, cancele primeiro os pagamentos correspondentes. Pagamentos vinculados têm valor fixo para preservar a liquidação. O editor valida todos os vínculos antes de salvar.
 - Categorias são informadas em lançamentos, planos e compras. O resumo mensal soma saídas realizadas e parcelas atribuídas ao mês de fechamento. Exclui pagamentos de fatura para não duplicar gastos, além de previsões ainda não pagas, garantia e metas. Registros antigos permanecem em Sem categoria.
 - As contas C6 e Reserva livre são identificadas nos lançamentos realizados. Registros antigos sem conta são do C6. Pagamentos novos de fatura e despesas previstas são do C6 por padrão; a conta pode ser corrigida na edição. Isso permite comparar saldos de cada conta separadamente, mantendo o total financeiro.
-- Em Configurações, Conferir com o banco registra o saldo ou total de fatura observado e a diferença para o sistema naquela data. É uma conferência manual, sem integração bancária ou ajuste automático. Após corrigir registros, faça nova conferência. As anteriores preservam os valores que foram comparados.
+- Em Contas → Conferir com o banco registra o saldo ou total de fatura observado e a diferença para o sistema naquela data. É uma conferência manual, sem integração bancária ou ajuste automático. Após corrigir registros, faça nova conferência. As anteriores preservam os valores que foram comparados.
 - Em Metas, informe objetivo, valor já separado do dinheiro existente, aporte mensal planejado e prazo opcional. Reservas de metas reduzem o disponível e todos os ciclos projetados sem criar receitas ou saídas; a interface limita novas reservas ao dinheiro livre. A data estimada considera aportes a partir do próximo mês, sem movimentá-los automaticamente. Alterar o valor separado é uma alocação do saldo, não uma transferência bancária.
 - Comparar compra dentro de uma meta libera apenas a reserva daquela meta na simulação. As outras metas permanecem protegidas. Excluir uma meta libera sua alocação, sem modificar o saldo bancário.
 - Lembretes no painel destacam contas vencidas, vencimentos e fechamentos próximos e o salário previsto. A antecedência é configurável em 3, 7, 15 ou 30 dias. Os atalhos levam à tela de pagamento correspondente. Não há e-mails, notificações push ou execução em segundo plano.

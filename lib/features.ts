@@ -33,7 +33,7 @@ export function accountBalance(s:Settings,entries:Entry[],account:'C6'|'Reserva'
 }
 export function reminders(s:Settings,entries:Entry[],today=localDay()){
  const until=shiftDay(today,s.reminderDays??7),actual=entries.filter(e=>e.date<=today);
- const items=plannedExpenses(actual,until).map(e=>({id:e.id,label:e.label,date:e.date,amount:-e.amount,tab:1,status:e.date<today?'Vencida':e.date===today?'Vence hoje':'A vencer'}));
+ const items=plannedExpenses(entries.filter(e=>e.kind==='plan'||e.date<=today),until).map(e=>({id:e.id,label:e.label,date:e.date,amount:-e.amount,tab:1,status:e.date<today?'Vencida':e.date===today?'Vence hoje':'A vencer'}));
  for(const b of bills(actual,s))if(b.remaining>0&&(b.close<=until||b.due<=until))items.push({id:b.id,label:`Fatura ${b.card}`,date:b.due<=today?b.due:b.close,amount:b.remaining,tab:2,status:b.due<today?'Vencida':b.due===today?'Vence hoje':b.close<=today?'Fechada para pagar':'Fecha em breve'});
  const next=salaryCycle(today,s.extraHolidays).next;
  if(next<=until&&!actual.some(e=>e.kind==='income'&&e.salaryMonth===next.slice(0,7)))items.push({id:'salary',label:'Salário previsto',date:next,amount:s.salaryOverrides?.[next.slice(0,7)]??s.salary,tab:5,status:'Receita prevista'});

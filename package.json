@@ -1,0 +1,45 @@
+{
+  "name": "teste",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoaoAlves0014/Teste.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/JoaoAlves0014/Teste/issues"
+  },
+  "homepage": "https://github.com/JoaoAlves0014/Teste#readme",
+  "dependencies": {
+    "lucide-react": "^1.70.0",
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "engines": {
+    "node": "24.x"
+  }
+}

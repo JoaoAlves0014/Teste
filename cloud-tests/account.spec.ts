@@ -12,7 +12,7 @@ test('carrega conta, salva versão e mostra conflito sem perder alterações',as
  return route.fulfill({json:{}});
  });
  await page.goto('/');await expect(page.locator('.available')).toBeVisible();
- await page.getByRole('button',{name:'Nova movimentação'}).click();
+ await page.getByRole('button',{name:'Movimentações',exact:true}).click();await page.getByRole('button',{name:'Nova movimentação'}).click();
  await page.getByLabel('Descrição',{exact:true}).fill('Compra teste');await page.getByLabel('Valor (R$)',{exact:true}).fill('10');await page.getByRole('button',{name:'Salvar movimentação'}).click();
  await expect(page.getByText('Alterações pendentes',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Metas',exact:true}).click();await page.getByRole('button',{name:'Nova meta',exact:true}).click();await page.getByLabel('Nome da meta').fill('Reserva para celular');await page.getByLabel('Valor do objetivo (R$)').fill('100');await page.getByLabel('Já separado (R$)').fill('50');await page.getByLabel('Aporte mensal planejado (R$)').fill('10');await page.getByRole('button',{name:'Criar meta'}).click();await page.getByRole('button',{name:'Movimentações',exact:true}).click();

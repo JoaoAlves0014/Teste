@@ -19,13 +19,13 @@ Validação: `npm test`, `npm run typecheck`, `npm run build`. Após o build, `n
 
 - Dashboard: resumo do disponível, saldo, compromissos e reservas; gráfico dos próximos seis ciclos; despesas por categoria; lembretes; movimentações recentes; cartões e metas. Usa os dados cadastrados, sem exemplos fictícios no produto.
 - Movimentações: Histórico, Contas a pagar e Categorias são telas separadas.
-- Cartões: Faturas, Compras e Limites e datas.
+- Gastos e cartões: Meus gastos, Faturas e Limites e datas.
 - Contas: Saldos (incluindo saldos iniciais) e Conferir com o banco.
 - Planejamento: Previsão de saldo e Simular compra.
 - Metas: objetivos e comparação de compras. O formulário de criação abre sob demanda.
 - Configurações: Meu orçamento, Salário e calendário, Backup e dados.
 
-No celular, Dashboard, Extrato e Cartões ficam na barra inferior; Mais abre a navegação completa. Na conta conectada, Salvar na nuvem permanece no topo. O menu Conta reúne recarregar, importar dados locais e sair. O tema escuro usa preto e grafite com verde nos destaques, seguindo a preferência já salva.
+No celular, Dashboard, Extrato e Gastos ficam na barra inferior; Mais abre a navegação completa. Na conta conectada, Salvar na nuvem permanece no topo. O menu Conta reúne recarregar, importar dados locais e sair. O tema escuro usa preto e grafite com verde nos destaques, seguindo a preferência já salva.
 
 ## Previsão financeira
 
@@ -43,6 +43,16 @@ No celular, Dashboard, Extrato e Cartões ficam na barra inferior; Mais abre a n
 Em Movimentações → Contas a pagar, cadastre despesas únicas ou mensais com início e fim opcionais. Uma assinatura parcelada ou empréstimo com prestação fixa pode ser representado como despesa mensal até a última data; não há cálculo de juros/amortização de empréstimo.
 
 Uma previsão não movimenta o caixa. No vencimento ou depois, **Registrar pagamento** cria a saída e liquida a ocorrência. Pendências antigas continuam reservadas. Excluir o pagamento no histórico reabre a ocorrência. Planos já pagos ficam protegidos contra exclusão; para interromper uma recorrência, encerre-a. Não registre saída manual adicional para a mesma conta. Dias 29–31 são ajustados ao último dia dos meses menores.
+
+## Registro central de gastos
+
+Em **Gastos e cartões → Meus gastos**, informe descrição, valor total, Pago com e data. Nu e C6 são crédito; Pix/débito C6 e Reserva livre são saídas imediatas. O cadastro simples usa uma parcela. Parcelamento e detalhes reúne categoria, número de parcelas e importação de compras em andamento.
+
+A tabela reúne compras de cartão e saídas realizadas, com descrição, valor, cartão/conta, ciclo de fatura e situação. Pagamentos da fatura não entram de novo. Busca por descrição, cartão, mês original de compra e fatura ajudam a encontrar gastos. Ao filtrar uma fatura, o mês original deixa de limitar os resultados e o valor mostrado é o da parcela daquele ciclo. Sem filtro de fatura, o valor é o total original da compra.
+
+Os dois cartões em destaque mostram a primeira fatura pendente de cada cartão, com total, pago, restante, fechamento e vencimento. Isso não soma todas as parcelas futuras como se vencessem agora. Ver faturas deste cartão abre os ciclos correspondentes, incluindo os já pagos. O atalho Fechamento e vencimento leva ao cadastro das datas de ambos os cartões. Sem datas, o app pede a configuração antes de registrar uma compra no crédito.
+
+Novos gastos preservam o modelo de dados existente e os backups; não exigem SQL adicional. Salvar na nuvem continua explícito.
 
 ## Cartões
 
@@ -66,7 +76,7 @@ A Vercel acompanha `main` em `JoaoAlves0014/Teste`. Framework Next.js, diretóri
 
 ## Edição, categorias, metas e conferências
 
-- Em Movimentações, use o ícone de edição no histórico. Na aba Cartões → Compras, as compras também possuem botão Editar. Alterações sem pagamento recalculam saldo e parcelas. Compras e planos com pagamentos vinculados permitem descrição e categoria; para valores/datas/parcelas, cancele primeiro os pagamentos correspondentes. Pagamentos vinculados têm valor fixo para preservar a liquidação. O editor valida todos os vínculos antes de salvar.
+- Em Movimentações, use o ícone de edição no histórico. Na aba Gastos e cartões → Meus gastos, as compras também possuem botão Editar. Alterações sem pagamento recalculam saldo e parcelas. Compras e planos com pagamentos vinculados permitem descrição e categoria; para valores/datas/parcelas, cancele primeiro os pagamentos correspondentes. Pagamentos vinculados têm valor fixo para preservar a liquidação. O editor valida todos os vínculos antes de salvar.
 - Categorias são informadas em lançamentos, planos e compras. O resumo mensal soma saídas realizadas e parcelas atribuídas ao mês de fechamento. Exclui pagamentos de fatura para não duplicar gastos, além de previsões ainda não pagas, garantia e metas. Registros antigos permanecem em Sem categoria.
 - As contas C6 e Reserva livre são identificadas nos lançamentos realizados. Registros antigos sem conta são do C6. Pagamentos novos de fatura e despesas previstas são do C6 por padrão; a conta pode ser corrigida na edição. Isso permite comparar saldos de cada conta separadamente, mantendo o total financeiro.
 - Em Contas → Conferir com o banco registra o saldo ou total de fatura observado e a diferença para o sistema naquela data. É uma conferência manual, sem integração bancária ou ajuste automático. Após corrigir registros, faça nova conferência. As anteriores preservam os valores que foram comparados.

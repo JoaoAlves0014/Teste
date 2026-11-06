@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('registra receita, preserva após recarregar e simula compra',async({page})=>{
  await page.goto('/');
- await page.getByRole('button',{name:'Nova movimentação'}).click();
+ await page.getByRole('button',{name:'Movimentações',exact:true}).click();await page.getByRole('button',{name:'Nova movimentação'}).click();
  await page.getByLabel('Descrição',{exact:true}).fill('Salário de teste');
  await page.getByLabel('Valor (R$)',{exact:true}).fill('988');
  await page.getByLabel('Tipo',{exact:true}).selectOption('income');
@@ -22,14 +22,14 @@ test('compra em andamento, pagamento e estorno preservam o histórico',async({pa
  await expect.poll(()=>page.evaluate(()=>!!localStorage.getItem('clareza-v1'))).toBeTruthy();
  await page.evaluate(()=>{const data=JSON.parse(localStorage.getItem('clareza-v1')!);data.settings.balance=100000;data.settings.guarantee=0;data.settings.nuClose=10;data.settings.nuDue=20;data.entries=[];localStorage.setItem('clareza-v1',JSON.stringify(data))});
  await page.reload();
- await page.getByRole('button',{name:'Cartões',exact:true}).click();await page.getByRole('button',{name:'Compras',exact:true}).click();
- await page.getByLabel('Descrição da compra',{exact:true}).fill('Celular parcelado');
- await page.getByLabel('Valor total da compra (R$)',{exact:true}).fill('1200');
- await page.getByLabel('Total de parcelas',{exact:true}).fill('12');
+ await page.getByRole('button',{name:'Gastos e cartões',exact:true}).click();await page.getByRole('button',{name:'Meus gastos',exact:true}).click();
+ await page.getByLabel('Descrição do gasto',{exact:true}).fill('Celular parcelado');
+ await page.getByLabel('Valor total (R$)',{exact:true}).fill('1200');
+ await page.locator('summary').filter({hasText:'Parcelamento e detalhes'}).click();await page.getByLabel('Total de parcelas',{exact:true}).fill('12');
  await page.getByLabel('Próxima parcela a pagar',{exact:true}).fill('5');
- await page.getByLabel('Data original da compra',{exact:true}).fill('2025-01-01');
- await page.getByLabel('Mês do fechamento da primeira parcela pendente',{exact:true}).fill('2025-05');
- await page.getByRole('button',{name:'Cadastrar compra',exact:true}).click();await page.getByRole('button',{name:'Faturas',exact:true}).click();
+ await page.getByLabel('Data da compra',{exact:true}).fill('2025-01-01');
+ await page.getByLabel('Mês da primeira fatura pendente',{exact:true}).fill('2025-05');
+ await page.getByRole('button',{name:'Adicionar gasto',exact:true}).click();await page.getByRole('button',{name:'Faturas',exact:true}).click();
  await expect(page.locator('.bill')).toHaveCount(8);
  await expect(page.getByText('Celular parcelado · 5/12',{exact:true})).toBeVisible();
  page.on('dialog',dialog=>dialog.accept());
@@ -43,7 +43,7 @@ test('compra em andamento, pagamento e estorno preservam o histórico',async({pa
  await page.getByRole('button',{name:'Excluir Celular parcelado',exact:true}).click();
  await expect(page.getByText('Anule o pagamento correspondente antes de excluir esta compra.',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Excluir Pagamento Nubank · 2025-05-10',exact:true}).click();
- await page.getByRole('button',{name:'Cartões',exact:true}).click();
+ await page.getByRole('button',{name:'Gastos e cartões',exact:true}).click();await page.getByRole('button',{name:'Faturas',exact:true}).click();
  await expect(page.locator('.bill').first().getByRole('button',{name:/Pagar/})).toBeVisible();
 });
 test('prevê despesa mensal, liquida sem duplicar e mantém ajuste salarial',async({page})=>{
@@ -78,7 +78,7 @@ test('edita lançamento e compra, categoriza e confere saldo sem alterá-lo',asy
  await dialog.getByLabel('Descrição',{exact:true}).fill('Jantar');await dialog.getByLabel('Valor (R$)',{exact:true}).fill('30');await dialog.getByLabel('Categoria',{exact:true}).selectOption('Lazer');await dialog.getByRole('button',{name:'Salvar alterações'}).click();await expect(dialog).not.toBeVisible();
  await page.getByRole('button',{name:'Categorias',exact:true}).click();
  const report=page.locator('section').filter({has:page.getByRole('heading',{name:'Para onde foi seu dinheiro'})});await expect(report.getByText('Lazer',{exact:true})).toBeVisible();await expect(report).toContainText('30,00');
- await page.getByRole('button',{name:'Cartões',exact:true}).click();await page.getByRole('button',{name:'Compras',exact:true}).click();await page.getByLabel('Descrição da compra').fill('Celular');await page.getByLabel('Valor total da compra (R$)').fill('1200');await page.getByLabel('Total de parcelas',{exact:true}).fill('12');await page.getByRole('button',{name:'Cadastrar compra',exact:true}).click();
+ await page.getByRole('button',{name:'Gastos e cartões',exact:true}).click();await page.getByRole('button',{name:'Meus gastos',exact:true}).click();await page.getByLabel('Descrição do gasto').fill('Celular');await page.getByLabel('Valor total (R$)').fill('1200');await page.locator('summary').filter({hasText:'Parcelamento e detalhes'}).click();await page.getByLabel('Total de parcelas',{exact:true}).fill('12');await page.getByRole('button',{name:'Adicionar gasto',exact:true}).click();
  await page.getByRole('button',{name:'Editar Celular',exact:true}).click();await dialog.locator('[name="amount"]').fill('600');await dialog.getByLabel('Total de parcelas',{exact:true}).fill('3');await dialog.getByRole('button',{name:'Salvar alterações'}).click();await page.getByRole('button',{name:'Faturas',exact:true}).click();await expect(page.locator('.bill')).toHaveCount(3);await expect(page.locator('.bill').first()).toContainText('200,00');
  await page.getByRole('button',{name:'Contas',exact:true}).click();await page.getByRole('navigation',{name:'Seções de Contas'}).getByRole('button',{name:'Conferir com o banco',exact:true}).click();const reconcile=page.locator('section').filter({has:page.getByRole('heading',{name:'Conferir com o banco'})});await reconcile.getByLabel('Valor no banco (R$)').fill('950');await reconcile.getByRole('button',{name:'Registrar conferência'}).click();await expect(reconcile.locator('tbody')).toContainText('970,00');await expect(reconcile.locator('tbody')).toContainText('950,00');await expect(reconcile.locator('tbody')).toContainText('20,00');
  await page.getByRole('button',{name:'Dashboard',exact:true}).click();await expect(page.locator('.metric h3').first()).toContainText('970,00');
@@ -106,4 +106,19 @@ test('dashboard e navegação móvel separam tarefas e preservam tema',async({pa
  await bottom.getByRole('button',{name:'Mais',exact:true}).click();await side.getByRole('button',{name:'Contas',exact:true}).click();await page.getByRole('button',{name:'Conferir reservas',exact:true}).click();await expect(page.getByLabel('Saldo ou fatura')).toHaveValue('cash:Reserva');
  await bottom.getByRole('button',{name:'Extrato',exact:true}).click();await expect(page.getByRole('heading',{name:'Seu histórico',exact:true})).toBeVisible();await expect(page.getByLabel('Descrição da despesa')).toHaveCount(0);await page.getByRole('button',{name:'Contas a pagar',exact:true}).click();await expect(page.getByLabel('Descrição da despesa')).not.toBeVisible();await page.getByRole('button',{name:'Nova despesa',exact:true}).click();await expect(page.getByLabel('Descrição da despesa')).toBeVisible();
  await page.getByRole('button',{name:'Ativar modo escuro'}).click();await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');expect(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor)).toBe('rgb(9, 9, 11)');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+});
+test('centraliza coxinha no Nu e no C6, filtra faturas e não duplica pagamento',async({page})=>{
+ await page.clock.install({time:new Date('2026-11-06T15:00:00Z')});await page.goto('/');await expect(page.locator('.available')).toBeVisible();
+ await page.evaluate(()=>{const d=JSON.parse(localStorage.getItem('clareza-v1')!);d.settings={...d.settings,balance:100000,guarantee:0,variable:0,reserve:0,nuClose:0,nuDue:0,c6Close:0,c6Due:0};d.entries=[];localStorage.setItem('clareza-v1',JSON.stringify(d))});await page.reload();
+ await page.getByRole('button',{name:'Novo gasto',exact:true}).click();await page.getByRole('button',{name:'Fechamento e vencimento',exact:true}).click();
+ await page.getByLabel('Fechamento Nubank',{exact:true}).fill('10');await page.getByLabel('Vencimento Nubank',{exact:true}).fill('17');await page.getByLabel('Fechamento C6',{exact:true}).fill('3');await page.getByLabel('Vencimento C6',{exact:true}).fill('12');await page.getByRole('button',{name:'Meus gastos',exact:true}).click();
+ for(const method of ['Nubank','C6 Bank']){await page.getByLabel('Descrição do gasto',{exact:true}).fill('Coxinha');await page.getByLabel('Valor total (R$)',{exact:true}).fill('8.50');await page.getByLabel('Pago com',{exact:true}).selectOption(method);await page.getByRole('button',{name:'Adicionar gasto',exact:true}).click()}
+ const table=page.locator('.spending-table');await expect(table.locator('tbody tr')).toHaveCount(2);await expect(table).toContainText('Nu · crédito');await expect(table).toContainText('C6 · crédito');
+ await expect(page.locator('.spending-invoice').first().locator('.invoice-value')).toContainText('8,50');await expect(page.locator('.spending-invoice').nth(1).locator('.invoice-value')).toContainText('8,50');
+ await page.getByLabel('Filtrar cartão ou conta').selectOption('C6 Bank');await expect(table.locator('tbody tr')).toHaveCount(1);await expect(table).toContainText('03/12/2026');await page.getByLabel('Filtrar fatura').selectOption('C6 Bank:2026-12-03');await expect(page.getByLabel('Filtrar mês da compra')).toBeDisabled();await expect(table).toContainText('8,50');
+ await page.getByRole('button',{name:'Limpar filtros'}).click();await page.getByLabel('Descrição do gasto',{exact:true}).fill('Almoço Pix');await page.getByLabel('Valor total (R$)',{exact:true}).fill('20');await page.getByLabel('Pago com',{exact:true}).selectOption('cash:C6');await page.getByRole('button',{name:'Adicionar gasto',exact:true}).click();await expect(table.locator('tbody tr')).toHaveCount(3);
+ await page.clock.setSystemTime(new Date('2026-11-11T15:00:00Z'));page.on('dialog',d=>d.accept());await page.locator('.spending-invoice').first().getByRole('button',{name:'Ver faturas deste cartão'}).click();await expect(page.getByLabel('Exibir faturas')).toHaveValue('Nubank');await page.getByRole('button',{name:/^Pagar/}).first().click();
+ await page.getByRole('button',{name:'Meus gastos',exact:true}).click();await expect(table.locator('tbody tr')).toHaveCount(3);const nuRow=table.locator('tbody tr').filter({hasText:'Nu · crédito'});await expect(nuRow).toContainText('Pago');
+ await page.getByRole('button',{name:'Dashboard',exact:true}).click();await expect(page.locator('.metric h3').first()).toContainText('971,50');await page.reload();await page.getByRole('button',{name:'Gastos e cartões',exact:true}).click();await expect(table.locator('tbody tr')).toHaveCount(3);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });

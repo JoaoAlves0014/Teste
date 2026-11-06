@@ -89,3 +89,19 @@ Os campos novos continuam dentro do documento por usuário no Supabase, sem nova
 ## Próximas melhorias
 
 Rendimentos e investimentos; transferências entre contas; cálculo de empréstimos com juros; atualização independente do limite C6.
+
+## Extratos e relatórios (área independente)
+
+Em **Extratos e relatórios**, importe vários CSVs ou PDFs textuais e revise cada arquivo antes de confirmar. A análise usa `settings.statementReports` com documentos, lançamentos e regras de classificação separados de `entries`. Não lança gastos no orçamento, não altera saldos e não liquida faturas. Não exige nova migração SQL: o documento já é isolado por usuário na tabela existente. Use **Salvar na nuvem** para sincronizar; em modo local, os dados continuam no navegador.
+
+- CSV: leitura de UTF-8/Windows-1252 com separador detectável, cabeçalho ajustável e mapeamento de data, descrição, valor, ou crédito/débito separados. Valores em reais ou centavos. Datas brasileiras, ISO e sem ano (com referência explícita).
+- PDF: PDF.js extrai texto no navegador; worker é copiado pelo postinstall para `public/pdf.worker.min.mjs`, servido pela própria aplicação. PDFs protegidos podem ser abertos com senha local, não persistida. Limites: 20 MB e 100 páginas. Não há OCR embutido; PDFs escaneados exigem OCR ou CSV. Layouts diferentes podem precisar de escolha do valor, revisão do texto ou mapeamento manual. Não há promessa de extração automática completa de qualquer layout bancário.
+- A etapa de revisão mostra linhas válidas, rejeitadas, datas inferidas, categorias sugeridas e diferença para um total informado. Linhas zeradas e saldos podem ser rejeitados/ignorados. Nenhuma diferença é corrigida artificialmente. Importar depende de confirmação da revisão.
+- Mercado e Restaurantes são categorias distintas. Sugestões locais por descrição podem ser corrigidas e lembradas para importações futuras. Pix genérico não é automaticamente transferência própria; pagamentos de fatura reconhecidos e transferências próprias explícitas ficam fora dos gastos. Revise principalmente descrições ambíguas.
+- Hash do arquivo bloqueia importação repetida exata. Linhas semelhantes em outros arquivos começam desmarcadas; transações iguais repetidas dentro do mesmo arquivo preservam a multiplicidade. O usuário pode manter uma linha semelhante se for um gasto legítimo. Edições de categoria/tipo não apagam a chave da origem.
+- Dashboard por período, ano, banco e arquivo, com totais, categorias e tabela/gráfico mensal. É possível usar a competência da fatura de cartão ou a data original. Contas bancárias e arquivos sem competência usam a data do lançamento. Competência usa o primeiro dia do mês. Configure a referência ao importar ou em Arquivos e backups. Meses sem lançamentos indicam ausência de dados, não ausência de gastos.
+- Receitas menos gastos líquidos é resultado da classificação, não saldo bancário. Estornos reduzem gastos líquidos; transferências, pagamentos de fatura e ignorados não somam despesas/receitas. Os valores originais permanecem acessíveis para revisão.
+- Correção individual e revisão em lote em Lançamentos. Exclusão por arquivo remove somente sua análise. Backup JSON próprio e restauração isolada; o backup completo do aplicativo também inclui a análise.
+- Relatório PDF gerado no navegador com resumo, meses, categorias e detalhes opcionais. Não usa serviços externos para processar documentos.
+
+Limites de armazenamento por análise: 120 arquivos / 10 mil lançamentos / 500 regras. Arquivos originais, texto bruto e senhas não são guardados; somente metadados e lançamentos confirmados. Arquivos de teste do usuário ficam fora do Git e não são incorporados à aplicação. Os testes automatizados usam dados sintéticos; os dois exemplos enviados foram conferidos separadamente no navegador local.

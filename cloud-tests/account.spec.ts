@@ -16,9 +16,10 @@ test('carrega conta, salva versão e mostra conflito sem perder alterações',as
  await page.getByLabel('Descrição',{exact:true}).fill('Compra teste');await page.getByLabel('Valor (R$)',{exact:true}).fill('10');await page.getByRole('button',{name:'Salvar movimentação'}).click();
  await expect(page.getByText('Alterações pendentes',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Metas',exact:true}).click();await page.getByRole('button',{name:'Nova meta',exact:true}).click();await page.getByLabel('Nome da meta').fill('Reserva para celular');await page.getByLabel('Valor do objetivo (R$)').fill('100');await page.getByLabel('Já separado (R$)').fill('50');await page.getByLabel('Aporte mensal planejado (R$)').fill('10');await page.getByRole('button',{name:'Criar meta'}).click();await page.getByRole('button',{name:'Movimentações',exact:true}).click();
+ await page.getByRole('button',{name:'Extratos e relatórios',exact:true}).click();await page.getByRole('button',{name:'Importar arquivos',exact:true}).click();await page.getByLabel('Arquivos de extratos').setInputFiles({name:'Nubank_2026.csv',mimeType:'text/csv',buffer:Buffer.from('date,title,amount\n2026-10-01,Restaurante Teste,25.00')});await page.getByLabel(/Revisei os lançamentos/).check();await page.getByRole('button',{name:'Importar 1 lançamentos na análise'}).click();await page.getByRole('button',{name:'Movimentações',exact:true}).click();
  const request=page.waitForRequest(r=>r.url().includes('rpc/save_finance_account'));
  await page.getByRole('button',{name:'Salvar na nuvem',exact:true}).click();
- const payload=(await request).postDataJSON();expect(payload.expected_revision).toBe(2);expect(payload.payload.settings.goals[0]).toMatchObject({name:'Reserva para celular',saved:5000});
+ const payload=(await request).postDataJSON();expect(payload.expected_revision).toBe(2);expect(payload.payload.settings.statementReports.transactions).toHaveLength(1);expect(payload.payload.entries).toHaveLength(1);expect(payload.payload.settings.goals[0]).toMatchObject({name:'Reserva para celular',saved:5000});
  await expect(page.getByText(/Outra sessão alterou seus dados/)).toBeVisible();
  await expect(page.getByText('Compra teste',{exact:true})).toBeVisible();
  await page.route('https://zevonxoyngnjgrlacyia.supabase.co/rest/v1/rpc/save_finance_account',r=>r.fulfill({json:3}));

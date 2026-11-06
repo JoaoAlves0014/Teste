@@ -1,0 +1,33 @@
+import {test,expect} from '@playwright/test';
+import {jsPDF} from 'jspdf';
+import {readFile} from 'node:fs/promises';
+const csv='date,title,amount\n2026-10-03,Uber - NuPay,"10,30"\n2026-10-02,Restaurante Exemplo,"45,90"\n2026-10-02,Supermercado Exemplo,"100,00"\n2026-10-01,Pagamento recebido,"-156,20"';
+test('importa vários arquivos, classifica, salva ano, exporta PDF e não altera orçamento',async({page})=>{
+ await page.clock.install({time:new Date('2026-11-06T15:00:00Z')});
+ await page.goto('/');await expect(page.locator('.available')).toBeVisible();const budget=await page.locator('.available h2').innerText();
+ await page.getByRole('button',{name:'Extratos e relatórios',exact:true}).click();await page.getByRole('button',{name:'Importar arquivos',exact:true}).click();
+ const upload=page.getByLabel('Arquivos de extratos');await upload.setInputFiles({name:'Nubank_2026-10.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});
+ await expect(page.getByRole('heading',{name:'Revisar importação'})).toBeVisible();await expect(page.locator('.statement-preview tbody tr')).toHaveCount(4);await expect(page.locator('.statement-preview')).toContainText('Restaurantes');await expect(page.locator('.statement-preview')).toContainText('Mercado');
+ await page.getByLabel(/Revisei os lançamentos/).check();await page.getByRole('button',{name:'Importar 4 lançamentos na análise'}).click();
+ const pdf=new jsPDF();pdf.text('CAIXA ECONOMICA FEDERAL',14,20);pdf.text('01/02/2026 Salario R$ 1.000,00 R$ 1.000,00',14,35);pdf.text('02/02/2026 Restaurante Banco -R$ 40,00 R$ 960,00',14,45);
+ await upload.setInputFiles({name:'CAIXA_2026.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdf.output('arraybuffer'))});await expect(page.locator('.statement-preview tbody tr')).toHaveCount(2,{timeout:15000});await expect(page.getByLabel('Banco',{exact:true})).toHaveValue('CAIXA');await page.getByLabel(/Revisei os lançamentos/).check();await page.getByRole('button',{name:'Importar 2 lançamentos na análise'}).click();
+ await page.getByRole('button',{name:'Dashboard dos extratos',exact:true}).click();await expect(page.locator('.report-overview .metric h3').first()).toContainText('196,20');await expect(page.locator('.report-overview .metric h3').nth(1)).toContainText('1.000,00');await expect(page.locator('.report-overview .metric h3').last()).toContainText('2 arquivos');
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Exportar relatório PDF'}).click();const download=await downloadPromise;const bytes=await readFile((await download.path())!);expect(bytes.subarray(0,4).toString()).toBe('%PDF');expect(bytes.toString('latin1')).toContain('196,20');
+ await page.getByRole('button',{name:'Lançamentos',exact:true}).click();await page.getByRole('button',{name:'Revisar Restaurante Exemplo',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Revisar lançamento importado'});await dialog.getByLabel('Categoria sugerida').fill('Lazer');await dialog.getByLabel(/Lembrar tipo e categoria/).check();await dialog.getByRole('button',{name:'Salvar revisão'}).click();await expect(page.locator('.statement-transactions tbody')).toContainText('Lazer');
+ await page.getByLabel('Selecionar página').check();await page.locator('summary').filter({hasText:'Revisar selecionados em lote'}).click();await page.getByRole('button',{name:'Aplicar e marcar como revisados'}).click();await expect(page.locator('.statement-transactions').getByText('Revisado',{exact:true})).toHaveCount(6);
+ await page.getByRole('button',{name:'Importar arquivos',exact:true}).click();await upload.setInputFiles({name:'Nubank_2026-10.csv',mimeType:'text/csv',buffer:Buffer.from(csv)});await expect(page.getByText('Este arquivo já foi importado. Ele não será adicionado novamente.',{exact:true})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:'Extratos e relatórios',exact:true}).click();await expect(page.locator('.report-overview .metric h3').first()).toContainText('196,20');
+ const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('clareza-v1')!).settings.statementReports);expect(stored.transactions).toHaveLength(6);expect(stored.rules).toHaveLength(1);
+ await page.getByRole('button',{name:'Arquivos e backups',exact:true}).click();page.on('dialog',d=>d.accept());await page.getByRole('button',{name:'Excluir arquivo Nubank_2026-10.csv'}).click();await expect(page.locator('.statement-document')).toHaveCount(1);
+ await page.getByLabel('Restaurar análise JSON').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({data:stored}))});await expect(page.locator('.statement-document')).toHaveCount(2);
+ await page.getByRole('button',{name:'Dashboard',exact:true}).click();await expect(page.locator('.available h2')).toHaveText(budget);
+ await page.setViewportSize({width:390,height:844});await page.getByRole('navigation',{name:'Navegação móvel'}).getByRole('button',{name:'Mais'}).click();await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('button',{name:'Extratos e relatórios'}).click();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+});
+test('mapeia CSV bancário com cabeçalhos diferentes',async({page})=>{
+ await page.clock.install({time:new Date('2026-11-06T15:00:00Z')});
+ await page.goto('/');await expect(page.locator('.available')).toBeVisible();await page.getByRole('button',{name:'Extratos e relatórios',exact:true}).click();await page.getByRole('button',{name:'Importar arquivos',exact:true}).click();
+ await page.getByLabel('Arquivos de extratos').setInputFiles({name:'extrato-generico.csv',mimeType:'text/csv',buffer:Buffer.from('Quando;Texto;Quanto;Saldo\n06/11/2026;PIX Restaurante;-45,00;955,00')});
+ await expect(page.getByRole('heading',{name:'Revisar importação'})).toBeVisible();await page.getByLabel('Banco',{exact:true}).fill('CAIXA');await page.getByLabel('Coluna de data').selectOption('0');await page.getByLabel('Coluna de descrição').selectOption('1');await page.getByLabel('Coluna de valor').selectOption('2');await page.getByRole('button',{name:'Reprocessar leitura'}).click();
+ await expect(page.locator('.statement-preview tbody tr')).toHaveCount(1);await expect(page.locator('.statement-preview')).toContainText('Restaurantes');await page.getByLabel(/Revisei os lançamentos/).check();await page.getByRole('button',{name:'Importar 1 lançamentos na análise'}).click();
+ await page.getByRole('button',{name:'Dashboard dos extratos',exact:true}).click();await expect(page.locator('.report-overview .metric h3').first()).toContainText('45,00');await expect(page.getByLabel('Banco da análise')).toContainText('CAIXA');
+});

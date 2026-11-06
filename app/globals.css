@@ -58,3 +58,27 @@ textarea{width:100%;min-width:0;background:var(--surface);color:var(--ink);borde
 .setup-journey>.panel { margin-bottom:20px; }
 .setup-journey h1 { font-size:28px; margin:14px 0; }
 .setup-journey .feature-actions { display:flex; gap:12px; flex-wrap:wrap; margin:18px 0; }
+
+/* The initial assessment has no sidebar and uses its own form layout. */
+body:has(.onboarding) .cloud-toolbar,body:has(.setup-journey) .cloud-toolbar { margin-left:0; }
+.onboarding { max-width:680px; margin:36px auto; padding:0 20px 80px; }
+.onboarding>.panel { padding:32px; }
+.onboarding-brand { font-size:23px;font-weight:700;letter-spacing:-1px;margin-bottom:24px; }
+.onboarding-brand span { color:var(--accent); }
+.onboarding h1 { font-size:27px;line-height:1.25;margin:14px 0; }
+.onboarding>.panel>p { font-size:13px;line-height:1.8; }
+.onboarding-form { display:flex;flex-direction:column;gap:22px;margin-top:28px; }
+.onboarding-form fieldset { border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:16px;min-width:0; }
+.onboarding-form legend { padding:0;margin-bottom:16px;font-size:14px;font-weight:600; }
+.onboarding-form label { margin:0;gap:8px;font-size:12px; }
+.onboarding-form input:not([type=checkbox]),.onboarding-form select { min-height:44px;width:100%;font-size:13px; }
+.onboarding-form label small { font-size:12px;line-height:1.7; }
+.onboarding-form .check-label { display:flex;align-items:center;gap:10px;line-height:1.6; }
+.onboarding-calendar { border-top:1px solid var(--border);padding-top:16px; }
+.onboarding-calendar summary { cursor:pointer;font-size:12px;color:var(--muted); }
+.onboarding-calendar p { font-size:12px;line-height:1.7; }
+.onboarding-actions { display:flex;justify-content:flex-end;align-items:center;gap:12px;border-top:1px solid var(--border);padding-top:20px; }
+.onboarding-actions button { min-width:120px;min-height:44px; }
+.setup-journey .plan-form { align-items:start; }
+.setup-journey .plan-form>h2,.setup-journey .plan-form>p,.setup-journey .plan-form>.feature-actions { grid-column:1/-1; }
+@media(max-width:600px) { .onboarding {margin:20px auto;padding:0 16px 70px;}.onboarding>.panel {padding:24px;}.onboarding h1 {font-size:24px;}.onboarding-actions button {flex:1;min-width:0;} }

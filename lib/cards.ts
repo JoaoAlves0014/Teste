@@ -1,3 +1,4 @@
+import {cards} from './profile';
 import type {Entry, Settings} from './finance';
 export const localDay = () => new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 export function monthDate(month:string,day:number,offset=0){const [y,m]=month.split('-').map(Number);const d=new Date(Date.UTC(y,m-1+offset,1));const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,last)).padStart(2,'0')}`}
@@ -6,8 +7,9 @@ export type Bill={id:string;card:string;close:string;due:string;charges:Charge[]
 export function schedule(e:Entry,s:Settings):Charge[]{
  if(e.kind!=='card')return [];
  const count=e.installments??1,first=e.firstInstallment??1;
- const closeDay=e.closeDay??(e.card==='C6 Bank'?s.c6Close:s.nuClose);
- const dueDay=e.dueDay??(e.card==='C6 Bank'?s.c6Due:s.nuDue);
+ const config=cards(s).find(c=>c.id===(e.card||'Nubank'));
+ const closeDay=e.closeDay??config?.close??0;
+ const dueDay=e.dueDay??config?.due??0;
  // Legacy records without configured dates stay in their original calendar month.
  let month=e.firstMonth??e.date.slice(0,7);
  if(!e.firstMonth&&closeDay&&e.date>=monthDate(month,closeDay))month=monthDate(month,1,1).slice(0,7);
@@ -29,19 +31,22 @@ export function bills(entries:Entry[],s:Settings):Bill[]{
  }
  return [...map.values()].sort((a,b)=>a.close.localeCompare(b.close)||a.card.localeCompare(b.card));
 }
-export function paymentFor(bill:Bill,entries:Entry[],date:string):Entry{
+export function paymentFor(bill:Bill,entries:Entry[],date:string,account?:string,name=bill.card):Entry{
  if(bill.close>date)throw Error('Aguarde o fechamento para registrar o pagamento.');
  if(bill.remaining<=0)throw Error('Esta fatura já está paga.');
  const paid=entries.filter(e=>e.kind==='payment').flatMap(e=>e.allocations??[]);
  const allocations=bill.charges.map(c=>({chargeId:c.id,amount:c.amount-paid.filter(p=>p.chargeId===c.id).reduce((a,p)=>a+p.amount,0)})).filter(p=>p.amount>0);
- return {id:crypto.randomUUID(),label:`Pagamento ${bill.card} · ${bill.close}`,kind:'payment',card:bill.card,date,amount:allocations.reduce((a,p)=>a+p.amount,0),allocations};
+ return {id:crypto.randomUUID(),label:`Pagamento ${name} · ${bill.close}`,kind:'payment',card:bill.card,...(account?{account}:{}),date,amount:allocations.reduce((a,p)=>a+p.amount,0),allocations};
 }
 export function cardReserve(entries:Entry[],s:Settings,today:string){
  const all=bills(entries,s);let reserve=0;
- for(const card of ['Nubank','C6 Bank']){
+ for(const card of new Set(all.map(b=>b.card))){
  const open=all.filter(b=>b.card===card&&b.remaining>0);
  const next=open.find(b=>b.close>=today)?.close;
  reserve+=open.filter(b=>b.close<=today||b.close===next).reduce((a,b)=>a+b.remaining,0);
  }
  return reserve;
 }
+
+// Freeze the effective cycle before changing account/card configuration.
+export function preserveCardCycles(entries:Entry[],settings:Settings){return entries.map(e=>{if(e.kind!=='card'||(e.closeDay&&e.dueDay&&e.firstMonth))return e;const first=schedule(e,settings)[0],config=cards(settings).find(c=>c.id===(e.card??'Nubank'));return {...e,closeDay:e.closeDay||config?.close||31,dueDay:e.dueDay||config?.due||31,firstMonth:e.firstMonth??first?.close.slice(0,7)??e.date.slice(0,7)}})}

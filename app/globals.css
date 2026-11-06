@@ -46,3 +46,10 @@ textarea{width:100%;min-width:0;background:var(--surface);color:var(--ink);borde
 .merchant-hint strong { font-size:13px; }
 .merchant-hint p { font-size:12px; margin:8px 0; line-height:1.7; }
 .merchant-hint small { color:var(--muted); font-size:11px; }
+
+.onboarding { max-width:780px; margin:40px auto; padding:0 16px; }
+.onboarding h1 { margin:16px 0; font-size:28px; }
+.onboarding .plan-form { margin-top:24px; }
+.onboarding small,.profile-settings small { display:block; color:var(--muted); font-size:11px; line-height:1.7; }
+.profile-settings .budget-row { gap:12px; }
+.profile-settings .plan-form { margin-top:24px; border-top:1px solid var(--border); padding-top:18px; }

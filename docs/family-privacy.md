@@ -1,0 +1,9 @@
+# Uso individual e futura visão familiar
+
+Cada pessoa tem login Google e documento financeiro próprio no Supabase. As políticas existentes usam auth.uid() tanto na leitura quanto na gravação; nenhum cadastro familiar amplia esse acesso. Bancos, cartões, limites, contas, renda e calendário pertencem ao perfil individual. Novos usuários começam zerados, com configuração guiada. Dados antigos continuam legíveis por um adaptador e podem ser convertidos para cadastros configuráveis sem alterar IDs dos lançamentos ou vínculos de pagamentos.
+
+A visão compartilhada da família NÃO faz parte desta entrega. Não há botão de compartilhamento nem envio de dados de um perfil para outro. Para implementá-la, serão necessários convites, adesão explícita e possibilidade de sair, além de uma função no servidor que retorne exclusivamente agregados autorizados. O navegador de um familiar nunca deverá receber lançamentos individuais, nomes de participantes, contas, estabelecimentos ou contribuições por pessoa.
+
+Não prometer anonimato: em grupos pequenos, diferenças entre totais de meses, categorias raras ou a entrada/saída de alguém podem revelar contribuições. A próxima etapa deve definir um mínimo de participantes e despesas por agregado, períodos fechados, supressão de grupos pequenos e restrições a filtros e comparações. Não publicar totais que permitam reconstruir valores suprimidos por subtração. Detalhes pessoais, ranking, filtros por pessoa e exportação detalhada familiar ficam proibidos por projeto. Consentimento e bloqueios deverão ser aplicados no banco/servidor, com testes de isolamento entre usuários; ocultar componentes na tela não basta.
+
+Para liberar novos logins, conferir o status do OAuth no Google Cloud: em modo de teste é preciso cadastrar os familiares como usuários de teste. Antes de abrir ao público, revisar também cotas das APIs, recuperação de dados e isolamento real das políticas no projeto Supabase.

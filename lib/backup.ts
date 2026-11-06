@@ -1,3 +1,4 @@
+import {accounts,cards} from './profile';
 import {validStatements} from './statement-types';
 import {defaults,Entry,Settings} from './finance';
 import {schedule,monthDate} from './cards';
@@ -7,6 +8,15 @@ export function validBackup(data:unknown):data is {settings:Settings;entries:Ent
  if(!data||typeof data!=='object')return false;
  const {settings:s,entries}=data as {settings:Settings;entries:Entry[]};
  if(!s||!Array.isArray(entries)||!Object.keys(defaults).every(k=>k==='fatherStart'?typeof s[k]==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(s[k]):natural(s[k as keyof Settings])))return false;
+ const text=(v:unknown,max=100)=>typeof v==='string'&&!!v.trim()&&v.length<=max;
+ const identifier=(v:unknown)=>text(v)&&!String(v).includes(':');
+ if(s.accounts!==undefined&&(!Array.isArray(s.accounts)||s.accounts.length>50||new Set(s.accounts.map(a=>a?.id)).size!==s.accounts.length||!s.accounts.every(a=>a&&identifier(a.id)&&text(a.name)&&typeof a.bank==='string'&&a.bank.length<=100&&Number.isSafeInteger(a.opening)&&(a.archived===undefined||typeof a.archived==='boolean'))))return false;
+ if(s.creditCards!==undefined&&(!Array.isArray(s.creditCards)||s.creditCards.length>50||new Set(s.creditCards.map(c=>c?.id)).size!==s.creditCards.length||!s.creditCards.every(c=>c&&identifier(c.id)&&c.id!=='cash'&&text(c.name)&&typeof c.bank==='string'&&c.bank.length<=100&&[c.close,c.due].every(n=>natural(n)&&n<=31)&&(c.limit===null||natural(c.limit))&&(c.cap===null||natural(c.cap))&&(c.archived===undefined||typeof c.archived==='boolean')&&(c.paymentAccount===undefined||accounts(s).some(a=>a.id===c.paymentAccount)))))return false;
+ if(s.onboardingComplete!==undefined&&typeof s.onboardingComplete!=='boolean')return false;
+ if(s.displayName!==undefined&&(typeof s.displayName!=='string'||s.displayName.length>80))return false;
+ if(s.transferMonthly!==undefined&&!natural(s.transferMonthly))return false;
+ if(s.transferLabel!==undefined&&!text(s.transferLabel))return false;
+ if(s.salaryRule!==undefined&&(!s.salaryRule||!['day','business'].includes(s.salaryRule.type)||!Number.isInteger(s.salaryRule.day)||s.salaryRule.day<1||s.salaryRule.day>(s.salaryRule.type==='day'?31:20)||typeof s.salaryRule.saturday!=='boolean'||typeof s.salaryRule.curitiba!=='boolean'))return false;
  if(s.salaryOverrides!==undefined&&(!s.salaryOverrides||typeof s.salaryOverrides!=='object'||Array.isArray(s.salaryOverrides)||!Object.entries(s.salaryOverrides).every(([month,value])=>/^\d{4}-(0[1-9]|1[0-2])$/.test(month)&&natural(value))))return false;
  if(s.extraHolidays!==undefined&&(!Array.isArray(s.extraHolidays)||s.extraHolidays.length>100||!s.extraHolidays.every(day)||s.extraHolidays.some(d=>s.extraHolidays!.filter(v=>v.slice(0,7)===d.slice(0,7)).length>10)))return false;
  if(s.statementReports!==undefined&&!validStatements(s.statementReports))return false;
@@ -16,14 +26,16 @@ export function validBackup(data:unknown):data is {settings:Settings;entries:Ent
  if([s.nuClose,s.nuDue,s.c6Close,s.c6Due].some(n=>n>31))return false;
  const ids=new Set<string>();
  for(const e of entries){
- if(!e||typeof e.id!=='string'||ids.has(e.id)||typeof e.label!=='string'||!e.label.trim()||!natural(e.amount)||!e.amount||!day(e.date)||!['income','expense','father','card','payment','plan','guarantee'].includes(e.kind))return false;
+ if(!e||typeof e.id!=='string'||ids.has(e.id)||typeof e.label!=='string'||!e.label.trim()||!natural(e.amount)||!e.amount||!day(e.date)||!['income','expense','father','card','payment','plan','guarantee','transfer'].includes(e.kind))return false;
  ids.add(e.id);
  if(e.category!==undefined&&(typeof e.category!=='string'||e.category.length>80))return false;
- if(e.account!==undefined&&!['C6','Reserva'].includes(e.account))return false;
+ if(e.account!==undefined&&!accounts(s).some(a=>a.id===e.account))return false;
+ if(e.kind==='transfer'&&(!e.account||!e.toAccount||e.account===e.toAccount||!accounts(s).some(a=>a.id===e.toAccount)))return false;
+ if(e.toAccount!==undefined&&e.kind!=='transfer')return false;
  if(e.salaryMonth!==undefined&&(e.kind!=='income'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(e.salaryMonth)))return false;
  if(e.kind==='plan'&&(!['once','monthly'].includes(e.recurrence??'once')||e.date<'2000-01-01'||e.date>'2099-12-31'||(e.endDate!==undefined&&(!day(e.endDate)||e.endDate<e.date))))return false;
  if(e.kind==='card'){
- if(!['Nubank','C6 Bank'].includes(e.card??''))return false;
+ if(!cards(s).some(c=>c.id===e.card))return false;
  const n=e.installments??1,first=e.firstInstallment??1;
  if(!natural(n)||n<1||n>120||!natural(first)||first<1||first>n||e.amount<n)return false;
  if(e.firstMonth!==undefined&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(e.firstMonth))return false;

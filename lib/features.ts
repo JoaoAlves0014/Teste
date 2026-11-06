@@ -1,3 +1,4 @@
+import {accounts,cardName} from './profile';
 import {Entry,Settings,Goal} from './finance';
 import {bills,localDay,schedule,monthDate} from './cards';
 import {salaryCycle,shiftDay} from './calendar';
@@ -23,9 +24,10 @@ export function categoryTotals(entries:Entry[],s:Settings,month:string,today=loc
  }
  return [...totals.entries()].map(([category,amount])=>({category,amount})).sort((a,b)=>b.amount-a.amount||a.category.localeCompare(b.category));
 }
-export function accountBalance(s:Settings,entries:Entry[],account:'C6'|'Reserva',date=localDay()){
- let amount=account==='C6'?s.balance:s.savings;
- for(const e of entries.filter(e=>e.date<=date&&(e.account??'C6')===account)){
+export function accountBalance(s:Settings,entries:Entry[],account:string,date=localDay()){
+ let amount=accounts(s).find(a=>a.id===account)?.opening??0;
+ for(const e of entries.filter(e=>e.date<=date&&((e.account??accounts(s)[0]?.id??'C6')===account||e.kind==='transfer'&&e.toAccount===account))){
+ if(e.kind==='transfer'){amount+=(e.toAccount===account?e.amount:0)-(e.account===account?e.amount:0);continue}
  if(e.kind==='income'||e.kind==='father')amount+=e.amount;
  if(e.kind==='expense'||e.kind==='payment'||e.kind==='guarantee')amount-=e.amount;
  }
@@ -34,9 +36,9 @@ export function accountBalance(s:Settings,entries:Entry[],account:'C6'|'Reserva'
 export function reminders(s:Settings,entries:Entry[],today=localDay()){
  const until=shiftDay(today,s.reminderDays??7),actual=entries.filter(e=>e.date<=today);
  const items=plannedExpenses(entries.filter(e=>e.kind==='plan'||e.date<=today),until).map(e=>({id:e.id,label:e.label,date:e.date,amount:-e.amount,tab:1,status:e.date<today?'Vencida':e.date===today?'Vence hoje':'A vencer'}));
- for(const b of bills(actual,s))if(b.remaining>0&&(b.close<=until||b.due<=until))items.push({id:b.id,label:`Fatura ${b.card}`,date:b.due<=today?b.due:b.close,amount:b.remaining,tab:2,status:b.due<today?'Vencida':b.due===today?'Vence hoje':b.close<=today?'Fechada para pagar':'Fecha em breve'});
- const next=salaryCycle(today,s.extraHolidays).next;
- if(next<=until&&!actual.some(e=>e.kind==='income'&&e.salaryMonth===next.slice(0,7)))items.push({id:'salary',label:'Salário previsto',date:next,amount:s.salaryOverrides?.[next.slice(0,7)]??s.salary,tab:5,status:'Receita prevista'});
+ for(const b of bills(actual,s))if(b.remaining>0&&(b.close<=until||b.due<=until))items.push({id:b.id,label:`Fatura ${cardName(s,b.card)}`,date:b.due<=today?b.due:b.close,amount:b.remaining,tab:2,status:b.due<today?'Vencida':b.due===today?'Vence hoje':b.close<=today?'Fechada para pagar':'Fecha em breve'});
+ const next=salaryCycle(today,s.extraHolidays,s.salaryRule).next;
+ if((s.salaryOverrides?.[next.slice(0,7)]??s.salary)>0&&next<=until&&!actual.some(e=>e.kind==='income'&&e.salaryMonth===next.slice(0,7)))items.push({id:'salary',label:'Salário previsto',date:next,amount:s.salaryOverrides?.[next.slice(0,7)]??s.salary,tab:5,status:'Receita prevista'});
  return items.sort((a,b)=>a.date.localeCompare(b.date)||a.label.localeCompare(b.label));
 }
 export function goalProgress(goal:Goal,today=localDay()){

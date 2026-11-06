@@ -8,6 +8,8 @@ export function validBackup(data:unknown):data is {settings:Settings;entries:Ent
  if(!data||typeof data!=='object')return false;
  const {settings:s,entries}=data as {settings:Settings;entries:Entry[]};
  if(!s||!Array.isArray(entries)||!Object.keys(defaults).every(k=>k==='fatherStart'?typeof s[k]==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(s[k]):natural(s[k as keyof Settings])))return false;
+ if(s.setupStep!==undefined&&(!Number.isInteger(s.setupStep)||s.setupStep<0||s.setupStep>5))return false;
+ if(s.controlStart!==undefined&&!day(s.controlStart))return false;
  const text=(v:unknown,max=100)=>typeof v==='string'&&!!v.trim()&&v.length<=max;
  const identifier=(v:unknown)=>text(v)&&!String(v).includes(':');
  if(s.accounts!==undefined&&(!Array.isArray(s.accounts)||s.accounts.length>50||new Set(s.accounts.map(a=>a?.id)).size!==s.accounts.length||!s.accounts.every(a=>a&&identifier(a.id)&&text(a.name)&&typeof a.bank==='string'&&a.bank.length<=100&&Number.isSafeInteger(a.opening)&&(a.archived===undefined||typeof a.archived==='boolean'))))return false;
@@ -28,6 +30,7 @@ export function validBackup(data:unknown):data is {settings:Settings;entries:Ent
  for(const e of entries){
  if(!e||typeof e.id!=='string'||ids.has(e.id)||typeof e.label!=='string'||!e.label.trim()||!natural(e.amount)||!e.amount||!day(e.date)||!['income','expense','father','card','payment','plan','guarantee','transfer'].includes(e.kind))return false;
  ids.add(e.id);
+ if(e.sourceReports!==undefined&&(!Array.isArray(e.sourceReports)||!e.sourceReports.length||e.sourceReports.length>2||!e.sourceReports.every(id=>typeof id==='string'&&id.length>0&&id.length<200)))return false;
  if(e.category!==undefined&&(typeof e.category!=='string'||e.category.length>80))return false;
  if(e.account!==undefined&&!accounts(s).some(a=>a.id===e.account))return false;
  if(e.kind==='transfer'&&(!e.account||!e.toAccount||e.account===e.toAccount||!accounts(s).some(a=>a.id===e.toAccount)))return false;

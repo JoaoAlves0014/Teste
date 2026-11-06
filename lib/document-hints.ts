@@ -1,0 +1,3 @@
+import {reportMoney} from './statement-import';
+export type DocumentHints={due?:number;close?:number;limit?:number};
+export function documentHints(text:string):DocumentHints{const normalized=text.normalize('NFD').replace(/[\u0300-\u036f]/g,'');const due=normalized.match(/vencimento\s*[:\-]?\s*(\d{1,2})\s*[\/-]\s*\d{1,2}/i),close=normalized.match(/fechamento\s*[:\-]?\s*(?:dia\s*)?(\d{1,2})(?:\s*[\/-]\s*\d{1,2}|\b)/i),limit=normalized.match(/limite\s+(?:total|de credito)\s*[:\-]?\s*(?:R\$\s*)?([\d.]+,\d{2})/i);const hints:DocumentHints={};if(due&&+due[1]>=1&&+due[1]<=31)hints.due=+due[1];if(close&&+close[1]>=1&&+close[1]<=31)hints.close=+close[1];if(limit){const n=reportMoney(limit[1]);if(n!==null&&n>=0)hints.limit=n}return hints}

@@ -105,3 +105,11 @@ Em **Extratos e relatórios**, importe vários CSVs ou PDFs textuais e revise ca
 - Relatório PDF gerado no navegador com resumo, meses, categorias e detalhes opcionais. Não usa serviços externos para processar documentos.
 
 Limites de armazenamento por análise: 120 arquivos / 10 mil lançamentos / 500 regras. Arquivos originais, texto bruto e senhas não são guardados; somente metadados e lançamentos confirmados. Arquivos de teste do usuário ficam fora do Git e não são incorporados à aplicação. Os testes automatizados usam dados sintéticos; os dois exemplos enviados foram conferidos separadamente no navegador local.
+
+### Pesquisa de estabelecimentos nos extratos
+
+O editor permite trocar categorias por um seletor, criar categorias e pesquisar o nome do estabelecimento no Google ou Maps. Os links funcionam sem chave. Somente nome e localização preenchidos são enviados na pesquisa; valores e arquivos não são enviados.
+
+Para o botão **Identificar estabelecimento**, habilite **Places API (New)** no Google Cloud e configure `GOOGLE_PLACES_API_KEY` na Vercel como segredo de servidor. Restrinja a chave à Places API e configure cotas e faturamento no Google Cloud. Não use o Client Secret do login Google, nem prefixo `NEXT_PUBLIC_`. Faça um novo deploy após configurar. A consulta exige sessão Supabase válida e retorna até cinco candidatos; o usuário confere endereço/categoria e salva a revisão. O limite local de seis consultas por minuto é por instância; as cotas do Google devem controlar o consumo total. Sem a chave, o app informa que a busca automática não está ativada e mantém os links manuais.
+
+Ao confirmar uma categoria, é possível aplicar aos pendentes do mesmo estabelecimento e tipo e lembrar para novas importações. A correspondência ignora alguns intermediadores de pagamento e parcelas, mas não agrupa IOF, Pix genéricos ou transferências com as compras. O botão **Aplicar regras salvas aos pendentes** usa confirmações anteriores, sem consulta externa e sem substituir lançamentos já revisados.

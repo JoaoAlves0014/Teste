@@ -1,3 +1,5 @@
+import {merchantKey} from './merchant';
+import {classify} from './statement-import';
 import {ReportKind,ReportTransaction,StatementStore,normalizeReport,ReportDocument,ruleFor} from './statement-types';
 export type ReportFilter={from:string;to:string;bank:string;document:string;basis?:'transaction'|'statement'};
 export function statementDate(t:ReportTransaction,document:ReportDocument|undefined,basis?:string){return basis==='statement'&&document?.type==='card'&&document.statementMonth?document.statementMonth+'-01':t.date}
@@ -10,7 +12,9 @@ export function analyzeStatements(rows:ReportTransaction[],from?:string,to?:stri
  }
  return {expenses,income,refunds,netExpenses:expenses-refunds,result:income-expenses+refunds,excluded,unreviewed,categories:[...categories].map(([category,amount])=>({category,amount})).sort((a,b)=>b.amount-a.amount),months:[...months.values()].sort((a,b)=>a.month.localeCompare(b.month))};
 }
-export function editReportTransaction(store:StatementStore,edited:ReportTransaction,remember=false){
- let rules=store.rules;if(remember){rules=[...rules.filter(r=>normalizeReport(r.description)!==normalizeReport(edited.description)),ruleFor(edited,store.documents.find(d=>d.id===edited.documentId)?.type??'bank')].slice(-500)}
- return {...store,rules,transactions:store.transactions.map(t=>t.id===edited.id?{...edited,documentId:t.documentId,sourceKey:t.sourceKey,reviewed:true}:t)};
+export function editReportTransaction(store:StatementStore,edited:ReportTransaction,remember=false,applySimilar=false){
+ const key=merchantKey(edited.description);let rules=store.rules;if(remember){rules=[ruleFor(edited,store.documents.find(d=>d.id===edited.documentId)?.type??'bank'),...rules.filter(r=>normalizeReport(r.description)!==normalizeReport(edited.description)&&(!key||(r.merchantKey??merchantKey(r.description))!==key))].slice(0,500)}
+ return {...store,rules,transactions:store.transactions.map(t=>t.id===edited.id?{...edited,documentId:t.documentId,sourceKey:t.sourceKey,reviewed:true}:applySimilar&&key&&!t.reviewed&&t.kind===edited.kind&&merchantKey(t.description)===key?{...t,category:edited.category,reviewed:true}:t)};
 }
+
+export function applySavedReportRules(store:StatementStore){const documents=new Map(store.documents.map(d=>[d.id,d]));let count=0;const transactions=store.transactions.map(t=>{if(t.reviewed)return t;const d=documents.get(t.documentId);if(!d)return t;const raw=Number(t.sourceKey?.split('|').at(-1)),signed=Number.isFinite(raw)&&raw!==0?raw:(d.type==='bank'&&t.kind==='expense'?-t.amount:t.amount),suggested=classify(t.description,signed,d.type,store.rules);if(!suggested.reviewed)return t;count++;return {...t,...suggested}});return {store:{...store,transactions},count}}

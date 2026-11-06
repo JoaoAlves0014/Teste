@@ -1,3 +1,4 @@
+import {merchantKey} from './merchant';
 import Papa from 'papaparse';
 import {ReportDocument,ReportKind,ReportRule,ReviewRow,StatementStore,normalizeReport,validDate} from './statement-types';
 export type ImportOptions={document:ReportDocument;year:number;month:number;pdfAmount:'first'|'last';rules:ReportRule[]};
@@ -20,7 +21,7 @@ export function reportDate(raw:string,year:number,referenceMonth=0){
  return validDate(date)?{date,inferred}:null;
 }
 export function classify(description:string,signed:number,type:'card'|'bank',rules:ReportRule[],direction=''):{kind:ReportKind;category:string;reviewed:boolean}{
- const s=normalizeReport(description),rule=rules.find(r=>normalizeReport(r.description)===s);if(rule){const base=classify(description,signed,type,[],direction),sameSource=rule.documentType===type&&rule.polarity===(signed<0?'negative':'positive'),apply=sameSource||rule.kind===base.kind;return {kind:apply?rule.kind:base.kind,category:rule.category,reviewed:apply}};
+ const s=normalizeReport(description),key=merchantKey(description),matches=key?rules.filter(r=>(r.merchantKey??merchantKey(r.description))===key):[],rule=rules.find(r=>normalizeReport(r.description)===s)??(new Set(matches.map(r=>r.category+'|'+r.kind)).size===1?matches[0]:undefined);if(rule){const base=classify(description,signed,type,[],direction),sameSource=rule.documentType===type&&rule.polarity===(signed<0?'negative':'positive'),apply=sameSource||rule.kind===base.kind;return {kind:apply?rule.kind:base.kind,category:rule.category,reviewed:apply}};
  let kind:ReportKind;
  if(/(saldo (anterior|final|do dia|restante)|total (da fatura|a pagar|de compras))/.test(s))kind='ignore';
  else if(/(pagamento|pagto|pagt|pgto).*(fatura|cartao)/.test(s)||(type==='card'&&/^(pagamento (recebido|em\b)|pagamento efetuado)/.test(s)))kind='bill_payment';

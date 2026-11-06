@@ -25,3 +25,18 @@ textarea{width:100%;min-width:0;background:var(--surface);color:var(--ink);borde
 .merchant-result { border-top:1px solid var(--border, #333); padding:14px 0; }
 .merchant-result p { overflow-wrap:anywhere; }
 .merchant-result button { margin:10px 0; display:block; }
+
+.merchant-batch-dialog { width: min(960px, calc(100% - 32px)); }
+.merchant-batch-dialog>.panel-title { align-items:flex-start; }
+.merchant-batch-dialog .feature-actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:14px 0; }
+.merchant-batch-dialog a { color:var(--green, #22c55e); font-size:12px; }
+.merchant-batch-dialog progress { width:100%; accent-color:#22c55e; margin:12px 0; }
+.merchant-batch-progress { font-size:13px; margin-top:18px; }
+.merchant-batch-results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.merchant-review-card { border:1px solid var(--border); border-radius:12px; padding:18px; min-width:0; }
+.merchant-review-card h3,.merchant-review-card p { overflow-wrap:anywhere; }
+.merchant-review-card h3 { font-size:14px; }
+.merchant-review-card .panel-title p { margin-top:8px; }
+.merchant-review-card select { text-overflow:ellipsis; }
+.merchant-batch-footer { margin-top:20px; padding-top:12px; border-top:1px solid var(--border); }
+@media(max-width:640px) { .merchant-batch-dialog { width:calc(100% - 24px);padding:18px; }.merchant-batch-results {grid-template-columns:1fr;}.merchant-review-card {padding:14px;} }

@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'./cloud-tests',webServer:{command:'npm run dev -- --port 3002',url:'http://localhost:3002',reuseExistingServer:false,env:{NEXT_PUBLIC_SUPABASE_URL:'https://zevonxoyngnjgrlacyia.supabase.co',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test_only'}},use:{baseURL:'http://localhost:3002',launchOptions:{executablePath:'/usr/bin/chromium',args:['--no-sandbox']}}});

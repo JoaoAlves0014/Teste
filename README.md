@@ -56,3 +56,7 @@ Persistência no Supabase com autenticação Google e políticas por usuário; t
 No painel da Vercel, escolha Add New → Project e importe `JoaoAlves0014/Teste`. Framework: Next.js; Root Directory: raiz do repositório; Install Command: `npm ci`; Build Command: `npm run build`; Output Directory: padrão do Next.js. Node.js: 24.x. Esta versão não exige variáveis de ambiente. Clique em Deploy e use o domínio gerado pela Vercel.
 
 O app publicado não tem autenticação: cada navegador mantém seus próprios registros locais. Os dados não são enviados a um banco de dados. Não existe sincronização entre dispositivos, e limpar o armazenamento do site apaga os registros locais. Faça backups pela tela Configurações. O domínio de produção tem armazenamento distinto do ambiente de desenvolvimento e das URLs de preview.
+
+## Integração Supabase (preparada)
+
+Veja [supabase/SETUP.md](supabase/SETUP.md) para SQL, políticas por usuário, Google OAuth e variáveis públicas. Com as variáveis configuradas, o app exige login e permite salvar/carregar a conta na nuvem explicitamente. Sem elas, permanece no modo local. A configuração real do projeto e o login Google precisam ser validados antes de anunciar a sincronização em produção.

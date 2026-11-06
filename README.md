@@ -52,6 +52,18 @@ O modelo JSON aceita os campos novos sem migração adicional de banco; backups 
 
 A Vercel acompanha `main` em `JoaoAlves0014/Teste`. Framework Next.js, diretório raiz, Node 24.x e build padrão. Variáveis NEXT_PUBLIC exigem novo build. Configuração e testes reais do banco estão descritos em [supabase/SETUP.md](supabase/SETUP.md).
 
+## Edição, categorias, metas e conferências
+
+- Em Movimentações, use o ícone de edição no histórico. Na aba Cartões, as compras também possuem botão Editar. Alterações sem pagamento recalculam saldo e parcelas. Compras e planos com pagamentos vinculados permitem descrição e categoria; para valores/datas/parcelas, cancele primeiro os pagamentos correspondentes. Pagamentos vinculados têm valor fixo para preservar a liquidação. O editor valida todos os vínculos antes de salvar.
+- Categorias são informadas em lançamentos, planos e compras. O resumo mensal soma saídas realizadas e parcelas atribuídas ao mês de fechamento. Exclui pagamentos de fatura para não duplicar gastos, além de previsões ainda não pagas, garantia e metas. Registros antigos permanecem em Sem categoria.
+- As contas C6 e Reserva livre são identificadas nos lançamentos realizados. Registros antigos sem conta são do C6. Pagamentos novos de fatura e despesas previstas são do C6 por padrão; a conta pode ser corrigida na edição. Isso permite comparar saldos de cada conta separadamente, mantendo o total financeiro.
+- Em Configurações, Conferir com o banco registra o saldo ou total de fatura observado e a diferença para o sistema naquela data. É uma conferência manual, sem integração bancária ou ajuste automático. Após corrigir registros, faça nova conferência. As anteriores preservam os valores que foram comparados.
+- Em Metas, informe objetivo, valor já separado do dinheiro existente, aporte mensal planejado e prazo opcional. Reservas de metas reduzem o disponível e todos os ciclos projetados sem criar receitas ou saídas; a interface limita novas reservas ao dinheiro livre. A data estimada considera aportes a partir do próximo mês, sem movimentá-los automaticamente. Alterar o valor separado é uma alocação do saldo, não uma transferência bancária.
+- Comparar compra dentro de uma meta libera apenas a reserva daquela meta na simulação. As outras metas permanecem protegidas. Excluir uma meta libera sua alocação, sem modificar o saldo bancário.
+- Lembretes no painel destacam contas vencidas, vencimentos e fechamentos próximos e o salário previsto. A antecedência é configurável em 3, 7, 15 ou 30 dias. Os atalhos levam à tela de pagamento correspondente. Não há e-mails, notificações push ou execução em segundo plano.
+
+Os campos novos continuam dentro do documento por usuário no Supabase, sem nova migração SQL. Use Salvar na nuvem para sincronizar as alterações.
+
 ## Próximas melhorias
 
-Conciliação de saldos, rendimentos e investimentos; transferências entre contas; cálculo de empréstimos com juros; atualização independente do limite C6.
+Rendimentos e investimentos; transferências entre contas; cálculo de empréstimos com juros; atualização independente do limite C6.

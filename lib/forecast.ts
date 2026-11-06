@@ -15,7 +15,7 @@ export function plannedExpenses(entries:Entry[],until:string):Event[]{
 export function settlePlan(event:Event,entries:Entry[],today=localDay()):Entry{
  if(!event.planId||!event.planDate||event.date>today)throw Error('Registre o pagamento na data prevista ou depois dela.');
  if(entries.some(e=>e.planId===event.planId&&e.planDate===event.planDate))throw Error('Essa despesa já foi paga.');
- return {id:crypto.randomUUID(),kind:'expense',label:event.label,date:today,amount:-event.amount,planId:event.planId,planDate:event.planDate};
+ return {id:crypto.randomUUID(),kind:'expense',label:event.label,date:today,amount:-event.amount,category:entries.find(p=>p.id===event.planId)?.category,planId:event.planId,planDate:event.planDate};
 }
 export type Proposal={price:number;count:number;method:'cash'|'Nubank'|'C6 Bank'};
 function proposalEvents(p:Proposal,s:Settings,today:string):Event[]{
@@ -47,8 +47,9 @@ export function forecast(s:Settings,entries:Entry[],today=localDay(),periods=6,p
  const cards=currentEvents.filter(e=>e.kind==='card').reduce((a,e)=>a-e.amount,0);
  const plans=currentEvents.filter(e=>e.kind==='plan'||e.kind==='expense').reduce((a,e)=>a-Math.min(0,e.amount),0);
  // Não antecipa receitas futuras: o disponível de hoje só usa dinheiro já recebido.
- const available=base.cash-s.reserve+currentEvents.reduce((a,e)=>a+Math.min(0,e.amount),0);
- let balance=base.cash-s.reserve;
+ const goalReserved=(s.goals??[]).reduce((a,g)=>a+g.saved,0);
+ const available=base.cash-s.reserve-goalReserved+currentEvents.reduce((a,e)=>a+Math.min(0,e.amount),0);
+ let balance=base.cash-s.reserve-goalReserved;
  const rows=boundaries.slice(0,-1).map((from,i)=>{
  const end=boundaries[i+1],items=ordered.filter(e=>e.date>=from&&e.date<end);let minimum=balance;let income=0,cost=0,payment=0;
  for(const e of items){balance+=e.amount;minimum=Math.min(minimum,balance);if(e.amount>0)income+=e.amount;else cost-=e.amount;if(e.proposed)payment-=e.amount}
@@ -56,7 +57,7 @@ export function forecast(s:Settings,entries:Entry[],today=localDay(),periods=6,p
  });
  const credit=proposal?.method==='Nubank'?Math.max(0,400000-bills(actual,s).filter(b=>b.card==='Nubank').reduce((a,b)=>a+b.remaining,0)):null;
  const capExceeded=!!proposal&&proposal.method==='Nubank'&&proposalEvents(proposal,s,today).some(e=>{const existing=bills(actual,s).find(b=>b.card==='Nubank'&&b.close===e.date);return (existing?.total??0)-e.amount>s.nuCap});
- return {nextSalary:cycle.next,cycleStart:cycle.start,available,cash:base.cash,cards,plans,guarantee,variable,rows,events:ordered,viable:rows.every(r=>r.minimum>=0)&&!capExceeded&&(credit===null||!proposal||proposal.price<=credit),capExceeded,credit};
+ return {goalReserved,nextSalary:cycle.next,cycleStart:cycle.start,available,cash:base.cash,cards,plans,guarantee,variable,rows,events:ordered,viable:rows.every(r=>r.minimum>=0)&&!capExceeded&&(credit===null||!proposal||proposal.price<=credit),capExceeded,credit};
 }
 export function maximumPurchase(s:Settings,entries:Entry[],today:string,count:number,method:Proposal['method']){
  const periods=Math.max(6,count+3);if(!forecast(s,entries,today,periods).rows.every(r=>r.minimum>=0))return 0;

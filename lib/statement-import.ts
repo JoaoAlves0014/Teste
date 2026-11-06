@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 import {ReportDocument,ReportKind,ReportRule,ReviewRow,StatementStore,normalizeReport,validDate} from './statement-types';
 export type ImportOptions={document:ReportDocument;year:number;month:number;pdfAmount:'first'|'last';rules:ReportRule[]};
 export type ImportResult={rows:ReviewRow[];rejected:{line:number;text:string;reason:string}[];warnings:string[];inferredDates:number;expectedTotal?:number};
-export type ColumnMap={date:number;description:number;amount:number;credit:number;debit:number;direction:number;mode:'single'|'split';unit:'reais'|'centavos'};
+export type ColumnMap={context?:number;date:number;description:number;amount:number;credit:number;debit:number;direction:number;mode:'single'|'split';unit:'reais'|'centavos'};
 export function reportMoney(raw:string,unit:'reais'|'centavos'='reais'){
  const source=raw.trim();if(!source)return null;
  const negative=!/C\s*$/i.test(source)&&/[−-]|\(|D\s*$/i.test(source);let s=source.replace(/[R$€£\s()−+CD-]/gi,'');if(!/^[\d.,]+$/.test(s))return null;
@@ -50,7 +50,7 @@ export function readCSV(text:string,delimiter='',headerRow?:number,hasHeader=tru
  const detected=rows.findIndex(r=>r.some(v=>/^(date|data|data do lancamento|data lancamento)$/.test(normalizeReport(v)))&&r.length>=2);
  const start=headerRow??Math.max(0,detected),header=rows[start]??[],headers=hasHeader?header:header.map((_,i)=>`Coluna ${i+1}`);
  const names=headers.map(normalizeReport),find=(re:RegExp)=>names.findIndex(v=>re.test(v));
- const map:ColumnMap={date:find(/^(date|data|data do lancamento|data lancamento|dt.*)$/),description:find(/^(title|description|descricao|historico|lancamento|transacao|detalhes)$/),amount:find(/^(amount|valor|value|valor.*lancamento)$/),credit:find(/^(credito|credit|entrada|receita).*$/),debit:find(/^(debito|debit|saida|despesa).*$/),direction:find(/^(tipo|type|natureza|sentido|d.c|dc)$/),mode:'single',unit:'reais'};
+ const map:ColumnMap={context:find(/^(titulo|title|tipo de operacao|tipo de lancamento)$/),date:find(/^(date|data|data do lancamento|data lancamento|dt.*)$/),description:find(/^(title|description|descricao|historico|lancamento|transacao|detalhes)$/),amount:find(/^(amount|valor|value|valor.*lancamento)$/),credit:find(/^(credito|credit|entrada|receita).*$/),debit:find(/^(debito|debit|saida|despesa).*$/),direction:find(/^(tipo|type|natureza|sentido|d.c|dc)$/),mode:'single',unit:'reais'};
  if(map.amount<0&&map.credit>=0&&map.debit>=0)map.mode='split';
  return {headers,rows:rows.slice(start+(hasHeader?1:0)),map,headerRow:start,delimiter:parsed.meta.delimiter,warnings:parsed.errors.map(e=>`CSV: ${e.message}`)};
 }
@@ -65,7 +65,8 @@ export function parseCSVRows(rows:string[][],map:ColumnMap,options:ImportOptions
  rows.forEach((r,i)=>{let signed:number|null,direction=map.direction>=0?r[map.direction]??'':'';
  if(map.mode==='split'){const cr=r[map.credit]??'',dr=r[map.debit]??'',parsedCredit=reportMoney(cr,map.unit),parsedDebit=reportMoney(dr,map.unit);if((cr.trim()&&parsedCredit===null)||(dr.trim()&&parsedDebit===null)){result.rejected.push({line:i+1,text:r.join(' | '),reason:'Valor de crédito ou débito inválido.'});return}const credit=parsedCredit??0,debit=parsedDebit??0;if(credit&&debit){result.rejected.push({line:i+1,text:r.join(' | '),reason:'Crédito e débito preenchidos juntos.'});return}signed=credit?Math.abs(credit):-Math.abs(debit);direction=credit?'credito':'debito'}
  else {const raw=r[map.amount]??'';signed=reportMoney(raw,map.unit);if(!direction)direction=raw.match(/([CD])\s*$/i)?.[1]??''}
- const parsed=signed===null?null:parsedRow(r[map.date]??'',r[map.description]??'',signed,direction,i+1,options);
+ const description=r[map.description]??'',context=map.context!==undefined&&map.context>=0&&map.context!==map.description?r[map.context]??'':'',fullDescription=context&&!normalizeReport(description).startsWith(normalizeReport(context))?`${context} · ${description}`:description;
+ const parsed=signed===null?null:parsedRow(r[map.date]??'',fullDescription,signed,direction,i+1,options);
  if(!parsed){result.rejected.push({line:i+1,text:r.join(' | '),reason:'Data, descrição ou valor ausente, zero ou inválido.'});return}result.rows.push(parsed.row);if(parsed.inferred)result.inferredDates++});return result;
 }
 export function parsePDFText(text:string,options:ImportOptions):ImportResult{

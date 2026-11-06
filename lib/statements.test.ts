@@ -34,3 +34,11 @@ describe('deduplicação e integridade',()=>{
  it('não transforma estorno em gasto ao reutilizar regra de categoria',()=>{const store=commitStatement(emptyStatements(),document,parse().rows),t=store.transactions[0],edited=editReportTransaction(store,{...t,category:'Viagens'},true);expect(classify(t.description,-t.amount,'card',edited.rules)).toMatchObject({kind:'refund',category:'Viagens',reviewed:false})});
  it('aprende classificação para próximas importações sem misturar bancos no orçamento',()=>{const store=commitStatement(emptyStatements(),document,parse().rows),t=store.transactions[0];const edited=editReportTransaction(store,{...t,category:'Viagens'},true);expect(classify(t.description,t.amount,'card',edited.rules).category).toBe('Viagens')});
 });
+
+describe('extrato anual C6 com preâmbulo e colunas separadas',()=>{
+ it('identifica cabeçalho, mantém operação e descrição, usa entrada/saída e ignora coluna de saldo',()=>{
+ const text='EXTRATO DE CONTA CORRENTE C6 BANK\n\nCliente exemplo\nConta exemplo\n\nPeríodo: 06/11/2025 a 06/11/2026\n\nData Lançamento,Data Contábil,Título,Descrição,Entrada(R$),Saída(R$),Saldo do Dia(R$)\n06/11/2025,06/11/2025,Pix recebido,Recebimento exemplo,100.00,0.00,500.00\n06/11/2026,06/11/2026,Pix enviado,TRANSF ENVIADA exemplo,0.00,30.00,470.00';
+ const csv=readCSV(text);expect(csv.map).toMatchObject({date:0,description:3,context:2,credit:4,debit:5,amount:-1,mode:'split'});
+ const document={id:'c6-year',name:'extrato.csv',bank:'C6',account:'Principal',type:'bank' as const,format:'csv' as const,hash:'a'.repeat(64),importedAt:'2026-11-06',rowCount:0,skipped:0};const result=parseCSVRows(csv.rows,csv.map,{document,year:2026,month:0,pdfAmount:'first',rules:[]});expect(result.rows).toHaveLength(2);expect(result.rows.map(r=>[r.date,r.kind,r.amount])).toEqual([['2025-11-06','income',10000],['2026-11-06','expense',3000]]);expect(result.rows[1].description).toBe('Pix enviado · TRANSF ENVIADA exemplo');expect(result.inferredDates).toBe(0);
+ });
+});

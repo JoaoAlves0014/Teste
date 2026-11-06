@@ -13,13 +13,14 @@ export function merchantSearchLinks(name:string,location=''){
 export function placeCategory(types:string[]):string|null{
  const has=(...keys:string[])=>keys.some(k=>types.includes(k));
  if(has('supermarket','grocery_store','food_store'))return 'Mercado';
- if(has('restaurant','cafe','bakery','meal_delivery','meal_takeaway','bar','coffee_shop'))return 'Restaurantes';
+ if(types.some(t=>t.endsWith('_restaurant'))||has('ice_cream_shop','dessert_shop','dessert_restaurant','acai_shop','juice_shop','restaurant','cafe','bakery','meal_delivery','meal_takeaway','bar','coffee_shop'))return 'Restaurantes';
  if(has('bus_station','transit_station','train_station','taxi_stand','gas_station','subway_station'))return 'Transporte';
  if(has('lodging','hotel','travel_agency','tourist_attraction'))return 'Viagens';
+ if(has('optician','optical_store'))return 'Saúde';
  if(has('pharmacy','drugstore','hospital','doctor','dentist'))return 'Saúde';
  if(has('school','university','library'))return 'Educação';
  if(has('movie_theater','amusement_park','night_club','bowling_alley'))return 'Lazer';
  if(has('clothing_store','electronics_store','department_store','shopping_mall','shoe_store'))return 'Compras';
  return null;
 }
-export type MerchantCandidate={id:string;name:string;address:string;category:string|null;url:string};
+export type MerchantCandidate={id:string;name:string;address:string;category:string|null;url:string;confidence?:'alta'|'media'|'baixa';matchReason?:string;categorySource?:'google'|'description'};

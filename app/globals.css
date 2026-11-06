@@ -40,3 +40,9 @@ textarea{width:100%;min-width:0;background:var(--surface);color:var(--ink);borde
 .merchant-review-card select { text-overflow:ellipsis; }
 .merchant-batch-footer { margin-top:20px; padding-top:12px; border-top:1px solid var(--border); }
 @media(max-width:640px) { .merchant-batch-dialog { width:calc(100% - 24px);padding:18px; }.merchant-batch-results {grid-template-columns:1fr;}.merchant-review-card {padding:14px;} }
+
+.merchant-location { max-width:360px; margin:0 0 14px; }
+.merchant-hint { border:1px solid var(--border); background:var(--surface); padding:12px; border-radius:8px; margin:14px 0; }
+.merchant-hint strong { font-size:13px; }
+.merchant-hint p { font-size:12px; margin:8px 0; line-height:1.7; }
+.merchant-hint small { color:var(--muted); font-size:11px; }

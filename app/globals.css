@@ -82,3 +82,13 @@ body:has(.onboarding) .cloud-toolbar,body:has(.setup-journey) .cloud-toolbar { m
 .setup-journey .plan-form { align-items:start; }
 .setup-journey .plan-form>h2,.setup-journey .plan-form>p,.setup-journey .plan-form>.feature-actions { grid-column:1/-1; }
 @media(max-width:600px) { .onboarding {margin:20px auto;padding:0 16px 70px;}.onboarding>.panel {padding:24px;}.onboarding h1 {font-size:24px;}.onboarding-actions button {flex:1;min-width:0;} }
+
+.merchant-transaction-context { display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:12px;margin:0 0 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2); }
+.merchant-transaction-context>strong { font-size:16px; }
+.merchant-transaction-context>span { font-size:12px;color:var(--muted); }
+.merchant-transaction-context details { width:100%;min-width:0;margin-top:6px; }
+.merchant-transaction-context summary { cursor:pointer;font-size:12px; }
+.merchant-transaction-context ul { list-style:none;padding:0;margin:10px 0 0;max-height:220px;overflow:auto; }
+.merchant-transaction-context li { border-top:1px solid var(--border);padding:10px 0;font-size:12px; }
+.merchant-transaction-context li>div { display:flex;justify-content:space-between;gap:12px; }
+.merchant-transaction-context li>span { display:block;color:var(--muted);font-size:11px;overflow-wrap:anywhere;margin-top:5px; }
